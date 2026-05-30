@@ -22,12 +22,7 @@ class CallLogsSyncWorker(
         var offset = 0
         val currentDate = Date().time
         val getDays: Long = 31L * 24 * 60 * 60 * 1000
-        val thirtyOneDaysAgo =
-            Date(currentDate - getDays).time // 31 days ago in milliseconds
-  /*      if (MyApp.instance.pref.userId == "4c68ce23-379c-4eec-b03e-e25f7310f56d") {
-            return Result.success()
-        }*/
-        return Result.success()
+        val thirtyOneDaysAgo = Date(currentDate - getDays).time
         do {
             val batch = db.callLogDao.getUnsyncedCallLogs(offset, batchSize, thirtyOneDaysAgo)
             if (batch.isNotEmpty()) {
