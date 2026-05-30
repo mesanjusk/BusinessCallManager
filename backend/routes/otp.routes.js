@@ -37,17 +37,11 @@ otpRouter.post("/sendOtp", async (req, res) => {
 				to: phone,
 				type: "template",
 				template: {
-					name: "otp",          // must match your approved template name in Meta
+					name: "instify_otp",
 					language: { code: "en_US" },
 					components: [
 						{
 							type: "body",
-							parameters: [{ type: "text", text: otp }]
-						},
-						{
-							type: "button",
-							sub_type: "url",
-							index: "0",
 							parameters: [{ type: "text", text: otp }]
 						}
 					]
