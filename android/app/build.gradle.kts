@@ -70,9 +70,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("businesscallmanager.keystore")
-            storePassword = "BCM@Secure2026"
-            keyAlias = "businesscallmanager"
-            keyPassword = "BCM@Secure2026"
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "BCM@Secure2026"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "businesscallmanager"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "BCM@Secure2026"
         }
     }
 
