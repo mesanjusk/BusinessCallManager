@@ -1,0 +1,21 @@
+# Android
+*.apk
+*.aab
+*.jks
+*.keystore
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/Dev/
+android/app/Prod/
+android/app/release/
+
+# Node.js / Backend
+backend/node_modules/
+backend/.env
+backend/*.log
+
+# General
+.DS_Store
+Thumbs.db

@@ -1,0 +1,76 @@
+package com.ruchitech.quicklinkcaller.test1.core
+
+import android.telecom.Call
+import android.telecom.Call.Callback
+import android.telecom.VideoProfile
+import android.util.Log
+import com.ruchitech.quicklinkcaller.MyApp
+
+/**
+ * Created by Muhammad Usman : msusman97@gmail.com on 11/17/2023.
+ */
+object CallManager {
+    const val TAG = "CallManager"
+    private val callback = object : Callback() {
+        override fun onStateChanged(call: Call, newState: Int) {
+            if (newState == Call.STATE_ACTIVE) {
+                MyApp.instance.notificationHelper.displayOngoingCallNotification(call.callPhone())
+            }
+            if (newState == Call.STATE_DISCONNECTED) {
+                MyApp.instance.notificationHelper.cancelOngoingCallNotification()
+                MyApp.instance.notificationHelper.cancelIncommingCallNotification()
+                MyApp.instance.notificationHelper.stopCallRingTone()
+            }
+            Log.d(TAG, "onStateChanged() called with:  newState = $newState , call = $call,")
+            uiCallback?.onStateChanged(call, newState)
+        }
+    }
+
+    private var uiCallback: Callback? = null
+
+    fun registerCallBack(callback: Callback) {
+        uiCallback = callback
+    }
+
+    fun unRegisterCallBack() {
+        uiCallback = null
+    }
+
+    var sCall: Call? = null
+    fun updateCall(call: Call?) {
+        if (call == null) {
+            sCall?.unregisterCallback(callback)
+        } else {
+            call.registerCallback(callback)
+        }
+        sCall = call
+    }
+
+
+    fun answer() {
+        sCall?.answer(VideoProfile.STATE_AUDIO_ONLY)
+    }
+
+    fun hangup() {
+        sCall?.disconnect()
+    }
+
+
+    fun playDtmfTone(char: Char) {
+        sCall?.playDtmfTone(char)
+    }
+
+    fun stopDtmfTone() {
+        sCall?.stopDtmfTone()
+    }
+
+    fun setCallOnHold(hold: Boolean) {
+        if (hold) {
+            sCall?.hold()
+        } else {
+            sCall?.unhold()
+        }
+
+    }
+
+}

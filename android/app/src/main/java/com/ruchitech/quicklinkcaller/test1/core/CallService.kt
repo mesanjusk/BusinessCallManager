@@ -1,0 +1,91 @@
+package com.ruchitech.quicklinkcaller.test1.core
+
+import android.app.KeyguardManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.PowerManager
+import android.telecom.Call
+import android.telecom.CallAudioState
+import android.telecom.InCallService
+import android.util.Log
+import com.ruchitech.quicklinkcaller.MyApp
+import com.ruchitech.quicklinkcaller.test1.ongoingCall.CallActivity
+
+
+/**
+ * Created by Muhammad Usman : msusman97@gmail.com on 11/172023.
+ */
+const val CALL_ACTION_MUTE = "action_mute"
+const val CALL_ACTION_UN_MUTE = "action_un_mute"
+const val CALL_ACTION_SPEAKER_ON = "action_speaker_on"
+const val CALL_ACTION_SPEAKER_OFF = "action_speaker_off"
+
+class CallService : InCallService() {
+    val TAG = "CallService"
+    private lateinit var powerManager: PowerManager
+    private lateinit var keyguardManager: KeyguardManager
+    private var lastCallIncomming = false
+    override fun onCreate() {
+        powerManager = getSystemService(PowerManager::class.java)
+        keyguardManager = getSystemService(KeyguardManager::class.java)
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(CALL_ACTION_MUTE)
+        intentFilter.addAction(CALL_ACTION_UN_MUTE)
+        intentFilter.addAction(CALL_ACTION_SPEAKER_ON)
+        intentFilter.addAction(CALL_ACTION_SPEAKER_OFF)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(callActionReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(callActionReceiver, intentFilter)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(callActionReceiver)
+    }
+
+    override fun onCallAdded(call: Call) {
+        Log.d(TAG, "onCallAdded() called with: call = $call")
+        super.onCallAdded(call)
+        CallManager.updateCall(call)
+        lastCallIncomming = call.state == Call.STATE_RINGING
+        if (call.state == Call.STATE_RINGING) {
+            if (powerManager.isInteractive && keyguardManager.isKeyguardLocked.not()) {
+                MyApp.instance.notificationHelper.displayIncomingCallNotification(call.callPhone())
+              MyApp.instance.notificationHelper.playCallRingTone()
+                CallActivity.start(this, call.callPhone())
+            } else {
+                MyApp.instance.notificationHelper.playCallRingTone()
+                CallActivity.start(this, call.callPhone())
+            }
+        } else if (call.state == Call.STATE_CONNECTING || call.state == Call.STATE_DIALING) {
+            CallActivity.start(this, call.callPhone())
+        }
+    }
+
+    override fun onCallRemoved(call: Call) {
+        super.onCallRemoved(call)
+        if (call.details.connectTimeMillis == 0L && lastCallIncomming) {
+            MyApp.instance.notificationHelper.showMissedCallNotification(call.callPhone())
+        }
+        CallManager.updateCall(null)
+    }
+
+
+    private val callActionReceiver = object : BroadcastReceiver() {
+        override fun onReceive(p0: Context, intent: Intent) {
+            when (intent.action) {
+                CALL_ACTION_MUTE -> setMuted(true)
+                CALL_ACTION_UN_MUTE -> setMuted(false)
+                CALL_ACTION_SPEAKER_ON -> setAudioRoute(CallAudioState.ROUTE_SPEAKER)
+                CALL_ACTION_SPEAKER_OFF -> setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                else -> {}
+            }
+        }
+    }
+}
