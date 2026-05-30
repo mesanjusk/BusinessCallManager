@@ -51,14 +51,7 @@ jobs:
         run: |
           gh release create latest BusinessCallManager.apk BusinessCallManager.aab \
             --title "Business Call Manager - Latest Build" \
-            --notes "$(cat <<'EOF'
-**APK** — direct install on Android phone
-**AAB** — upload this to Google Play Store
-
-Download link for APK:
-https://github.com/mesanjusk/BusinessCallManager/releases/download/latest/BusinessCallManager.apk
-EOF
-)" \
+            --notes "APK: direct install on Android | AAB: upload to Google Play Store" \
             --latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
