@@ -2,55 +2,108 @@ const express = require("express")
 const axios = require("axios")
 const otpRouter = express.Router()
 const Users = require("../models/user.model.js")
+const OtpRecord = require("../models/otp.model.js")
 
+const WA_URL = `https://graph.facebook.com/${process.env.WHATSAPP_API_VERSION}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`
+const OTP_EXPIRY_MINUTES = 5
+
+function generateOtp() {
+	return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+// POST /otp/sendOtp
+// Body: { phone: "919876543210" }  — country code + number, no +
+otpRouter.post("/sendOtp", async (req, res) => {
+	try {
+		let { phone } = req.body
+		if (!phone)
+			return res.status(400).json({ message: "Phone number is required", success: false })
+
+		// Normalise: strip leading + if present, ensure starts with country code
+		phone = phone.replace(/^\+/, "")
+
+		const otp = generateOtp()
+		const expires_at = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
+
+		// Invalidate any previous unused OTPs for this number
+		await OtpRecord.deleteMany({ phone, verified: false })
+		await OtpRecord.create({ phone, otp, expires_at })
+
+		// Send OTP via WhatsApp Cloud API using the pre-approved otp template
+		await axios.post(
+			WA_URL,
+			{
+				messaging_product: "whatsapp",
+				to: phone,
+				type: "template",
+				template: {
+					name: "otp",          // must match your approved template name in Meta
+					language: { code: "en_US" },
+					components: [
+						{
+							type: "body",
+							parameters: [{ type: "text", text: otp }]
+						},
+						{
+							type: "button",
+							sub_type: "url",
+							index: "0",
+							parameters: [{ type: "text", text: otp }]
+						}
+					]
+				}
+			},
+			{
+				headers: {
+					Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+					"Content-Type": "application/json"
+				}
+			}
+		)
+
+		return res.json({ success: true, message: "OTP sent via WhatsApp" })
+	} catch (error) {
+		console.error("sendOtp error:", error?.response?.data || error.message)
+		res.status(500).json({ message: "Failed to send OTP", success: false })
+	}
+})
+
+// POST /otp/verify_token
+// Body: { phone: "919876543210", otp: "123456" }
 otpRouter.post("/verify_token", async (req, res) => {
 	try {
-		const { token } = req.body
-		if (!token)
-			return res.status(400).json({
-				message: "Token is required for verification",
-				success: false
-			})
+		let { phone, otp } = req.body
+		if (!phone || !otp)
+			return res.status(400).json({ message: "Phone and OTP are required", success: false })
 
-		const response = await axios({
-			method: "POST",
-			url: "https://control.msg91.com/api/v5/widget/verifyAccessToken",
-			headers: {
-				"Content-Type": "application/json",
-				"Accept": "application/json"
-			},
-			data: {
-				"authkey": process.env.MSG91_AUTH_KEY,
-				"access-token": token
-			}
+		phone = phone.replace(/^\+/, "")
+
+		const record = await OtpRecord.findOne({ phone, verified: false }).sort({ expires_at: -1 })
+
+		if (!record)
+			return res.status(401).json({ message: "OTP not found or already used. Please request a new OTP.", success: false })
+
+		if (new Date() > record.expires_at)
+			return res.status(401).json({ message: "OTP expired. Please request a new one.", success: false })
+
+		if (record.otp !== otp.toString())
+			return res.status(401).json({ message: "Invalid OTP.", success: false })
+
+		record.verified = true
+		await record.save()
+
+		const userMobile = "+" + phone
+		let user = await Users.findOne({ user_mobile: userMobile })
+		if (!user) user = await Users.create({ user_mobile: userMobile })
+
+		return res.json({
+			success: true,
+			verificationId: phone,
+			user_uuid: user.user_uuid
 		})
-
-		if (response.data?.type === "success") {
-			const userMobile = "+91" + response.data?.message?.trim()?.slice(-10)
-			let user = await Users.findOne({ user_mobile: userMobile })
-			if (!user) user = await Users.create({ user_mobile: userMobile })
-
-			return res.json({
-				success: true,
-				verificationId: response.data?.message,
-				user_uuid: user.user_uuid
-			})
-		} else if ([701, 702].includes(response.data.code))
-			return res.status(401).json({
-				message: "Invalid token, relogin required.",
-				success: false
-			})
-		else {
-			return res.status(503).json({
-				message: "OTP verification service unavailable. Please contact support.",
-				success: false
-			})
-		}
 	} catch (error) {
-		res.status(500).json({
-			message: "Internal server error",
-			success: false
-		})
+		console.error("verify_token error:", error.message)
+		res.status(500).json({ message: "Internal server error", success: false })
 	}
 })
 
