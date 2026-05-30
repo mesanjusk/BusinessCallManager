@@ -67,9 +67,19 @@ android {
     }
 
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("businesscallmanager.keystore")
+            storePassword = "BCM@Secure2026"
+            keyAlias = "businesscallmanager"
+            keyPassword = "BCM@Secure2026"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
