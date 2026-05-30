@@ -80,8 +80,7 @@ class SplashVm @Inject constructor(
                    }
                } else {*/
 
-          appPreference.userId = "4c68ce23-379c-4eec-b03e-e25f7310f56d"
-        appPreference.setDefaultDone = false
+          appPreference.setDefaultDone = false
         if (appPreference.userId.isNullOrEmpty()) {
             Handler().postDelayed({
                 popToRouteAndNavigate(Screen.OtpRequestRoute.route, Screen.SplashScreen.route)
