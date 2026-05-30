@@ -34,9 +34,21 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BusinessCallManager-release
-          path: android/app/build/outputs/apk/Prod/release/*.apk
-          retention-days: 30
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/Prod/release/*.apk BusinessCallManager.apk
+
+      - name: Delete existing release if exists
+        run: |
+          gh release delete latest --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release with APK
+        run: |
+          gh release create latest BusinessCallManager.apk \
+            --title "Business Call Manager - Latest Build" \
+            --notes "Latest release. Download BusinessCallManager.apk below." \
+            --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
