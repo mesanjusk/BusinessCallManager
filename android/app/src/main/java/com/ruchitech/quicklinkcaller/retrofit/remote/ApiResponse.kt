@@ -1,6 +1,7 @@
 package com.ruchitech.quicklinkcaller.retrofit.remote
 
 
+import com.google.gson.Gson
 import com.ruchitech.quicklinkcaller.retrofit.model.BaseResponse
 import okhttp3.Headers
 import retrofit2.Response
@@ -24,7 +25,7 @@ sealed class ApiResponse<T> {
                         else -> when {
                             body is BaseResponse && !body.isSuccess -> {
                                 ApiErrorResponse(
-                                    body.errorMessage,
+                                    body.message.ifEmpty { body.errorMessage }.ifEmpty { errorHandler(code = response.code()) },
                                     response.code()
                                 )
                             }
@@ -38,10 +39,19 @@ sealed class ApiResponse<T> {
                     }
                 }
 
-                else -> ApiErrorResponse(
-                    errorHandler(code = response.code()),
-                    response.code()
-                )
+                else -> {
+                    // Try to parse the error body for a human-readable message
+                    val errorMsg = try {
+                        val errorJson = response.errorBody()?.string()
+                        if (!errorJson.isNullOrEmpty()) {
+                            val base = Gson().fromJson(errorJson, BaseResponse::class.java)
+                            base?.message?.ifEmpty { null } ?: errorHandler(code = response.code())
+                        } else errorHandler(code = response.code())
+                    } catch (e: Exception) {
+                        errorHandler(code = response.code())
+                    }
+                    ApiErrorResponse(errorMsg, response.code())
+                }
             }
     }
 }

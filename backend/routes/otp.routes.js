@@ -57,8 +57,12 @@ otpRouter.post("/sendOtp", async (req, res) => {
 
 		return res.json({ success: true, message: "OTP sent via WhatsApp" })
 	} catch (error) {
-		console.error("sendOtp error:", error?.response?.data || error.message)
-		res.status(500).json({ message: "Failed to send OTP", success: false })
+		const waError = error?.response?.data?.error
+		console.error("sendOtp error:", waError || error.message)
+		const userMsg = waError
+			? `WhatsApp error: ${waError.message || waError.type || JSON.stringify(waError)}`
+			: "Failed to send OTP. Please try again."
+		res.status(400).json({ message: userMsg, success: false })
 	}
 })
 
