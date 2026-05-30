@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Build Release APK + AAB
 
 on:
   push:
@@ -28,17 +28,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Prod Release APK
+      - name: Build Prod Release APK + AAB
         working-directory: android
-        run: ./gradlew assembleProdRelease --stacktrace
+        run: ./gradlew assembleProdRelease bundleProdRelease --stacktrace
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Rename APK
+      - name: Rename output files
         run: |
           cp android/app/build/outputs/apk/Prod/release/*.apk BusinessCallManager.apk
+          cp android/app/build/outputs/bundle/ProdRelease/*.aab BusinessCallManager.aab
 
       - name: Delete existing release if exists
         run: |
@@ -46,11 +47,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Release with APK
+      - name: Create GitHub Release with APK and AAB
         run: |
-          gh release create latest BusinessCallManager.apk \
+          gh release create latest BusinessCallManager.apk BusinessCallManager.aab \
             --title "Business Call Manager - Latest Build" \
-            --notes "Latest release. Download BusinessCallManager.apk below." \
+            --notes "$(cat <<'EOF'
+**APK** — direct install on Android phone
+**AAB** — upload this to Google Play Store
+
+Download link for APK:
+https://github.com/mesanjusk/BusinessCallManager/releases/download/latest/BusinessCallManager.apk
+EOF
+)" \
             --latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
