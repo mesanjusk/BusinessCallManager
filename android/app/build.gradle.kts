@@ -1,6 +1,8 @@
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationScope
 
 plugins {
     id("com.android.application")
@@ -103,6 +105,17 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.instrumentation.setAsmFramesComputationMode(
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+        )
+        variant.instrumentation.excludes.add(
+            "com/ruchitech/quicklinkcaller/persistence/recievers/NotificationReceiver"
+        )
     }
 }
 
