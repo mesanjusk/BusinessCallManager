@@ -44,6 +44,7 @@ import com.ruchitech.quicklinkcaller.helper.AppPreferences
 import com.ruchitech.quicklinkcaller.helper.Logger
 import com.ruchitech.quicklinkcaller.helper.NotificationHelper
 import com.ruchitech.quicklinkcaller.helper.isServiceRunning
+import com.ruchitech.quicklinkcaller.helper.syncAppLogs
 import com.ruchitech.quicklinkcaller.helper.syncUpdateCallLogs
 import com.ruchitech.quicklinkcaller.persistence.McsConstants.ACTION_HEARTBEAT
 import com.ruchitech.quicklinkcaller.persistence.McsConstants.CALL_STATE_OFFHOOK
@@ -211,6 +212,7 @@ class CallStateDetectionService : Service(), Handler.Callback {
         appPreference.lastHearBeatTime = 0L
         val logFile = File(getExternalFilesDir(null), "app_log.txt")
         logger = Logger("InsetsController024", logFile)
+        syncAppLogs()
         val callLogUri = CallLog.Calls.CONTENT_URI
         val callLogObserver = CallLogObserver(Handler(Looper.getMainLooper()))
         contentResolver.registerContentObserver(callLogUri, true, callLogObserver)

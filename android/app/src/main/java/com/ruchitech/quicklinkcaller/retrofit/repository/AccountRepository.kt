@@ -104,4 +104,12 @@ class AccountRepository
             shouldFetchFromRemote = { repoListRateLimit.shouldFetch("syncFetchedContacts${Date().time}") })
     }
 
+    fun syncAppLogs(userId: String, logs: String): Flow<Resource<BaseResponse>> {
+        return networkOnlyResource(
+            fetchFromRemote = {
+                appService.syncAppLogs(AppLogRequest(user_uuid = userId, logs = logs))
+            },
+            shouldFetchFromRemote = { repoListRateLimit.shouldFetch("syncAppLogs${Date().time}") })
+    }
+
 }

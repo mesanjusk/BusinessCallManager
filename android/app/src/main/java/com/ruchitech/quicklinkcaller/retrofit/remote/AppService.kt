@@ -36,6 +36,7 @@ interface AppService {
         private const val SYNC_UPDATE_CALL_LOGS = "logs/updateLogs"
         private const val FETCH_CALL_LOGS_BY_DATE = "logs/getAllLogs"
         private const val DELETE_USER = "secondaryContacts/deleteUser"
+        private const val SYNC_APP_LOGS = "appLogs"
 
     }
 
@@ -67,6 +68,9 @@ interface AppService {
 
     @POST(FETCH_CALL_LOGS_BY_DATE)
     fun fetchCallLogs(@Body hashMap: FetchCallLogs): Flow<ApiResponse<FetchCallLogsResult>>
+
+    @POST(SYNC_APP_LOGS)
+    fun syncAppLogs(@Body body: AppLogRequest): Flow<ApiResponse<com.ruchitech.quicklinkcaller.retrofit.model.BaseResponse>>
 
 }
 
