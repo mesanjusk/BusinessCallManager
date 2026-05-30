@@ -53,16 +53,16 @@ android {
     productFlavors {
         create("Dev") {
             dimension = "environment"
-            buildConfigField("String", "BASE_URL", "\"https://contacts.btgondia.com/\"")
+            buildConfigField("String", "BASE_URL", "\"https://businesscallmanager.onrender.com/\"")
         }
 
         create("Prod") {
             dimension = "environment"
-            buildConfigField("String", "BASE_URL", "\"https://contacts.btgondia.com/\"")
+            buildConfigField("String", "BASE_URL", "\"https://businesscallmanager.onrender.com/\"")
         }
         create("Local") {
             dimension = "environment"
-            buildConfigField("String", "BASE_URL", "\"https://contacts.btgondia.com/\"")
+            buildConfigField("String", "BASE_URL", "\"https://businesscallmanager.onrender.com/\"")
         }
     }
 
@@ -173,7 +173,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.25.0")
     implementation("io.michaelrocks:libphonenumber-android:8.13.48")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.13.5")
-    implementation("com.msg91.lib:sendotp:1.0.0")
+
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     /*    implementation("com.github.ozcanalasalvar.picker:wheelview:2.0.7")

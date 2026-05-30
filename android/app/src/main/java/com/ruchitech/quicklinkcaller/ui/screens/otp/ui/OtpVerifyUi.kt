@@ -86,7 +86,7 @@ fun OtpVerifyUi(viewModel: OtpVerifyVM) {
                 )
                 Spacer(modifier = Modifier.height(25.dp))
                 Text(
-                    text = "Please enter the 4-digit code sent to your mobile ${viewModel.argsMobileNumber} for verification.",
+                    text = "Please enter the 6-digit code sent to your WhatsApp ${viewModel.argsMobileNumber} for verification.",
                     modifier = Modifier
                         .fillMaxWidth(),
                     fontFamily = montserrat,
@@ -97,7 +97,7 @@ fun OtpVerifyUi(viewModel: OtpVerifyVM) {
                 )
                 Spacer(modifier = Modifier.height(45.dp))
                 val (editValue, setEditValue) = remember { mutableStateOf("") }
-                val otpLength = remember { 4 }
+                val otpLength = remember { 6 }
                 val focusRequester = remember { FocusRequester() }
 
                 val keyboard = LocalSoftwareKeyboardController.current

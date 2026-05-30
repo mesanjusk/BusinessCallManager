@@ -1,7 +1,10 @@
 package com.ruchitech.quicklinkcaller.ui.screens.otp.data
 
+import com.google.gson.annotations.SerializedName
+
 data class VerifyOtp(
-    val mobile:String,
-    val otp:String,
-    val token:String="",
+    @SerializedName("phone")
+    val mobile: String,
+    val otp: String,
+    val token: String = "",
 )

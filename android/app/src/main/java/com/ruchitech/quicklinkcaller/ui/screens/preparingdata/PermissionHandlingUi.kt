@@ -88,7 +88,7 @@ fun CallLogDisclosureDialog(
 ) {
     val annotatedText = buildAnnotatedString {
         append("To provide you with advanced call logging features, this app collects and securely uploads your Call Log metadata ")
-        append("(including call time, duration, and number) to our server at https://contacts.btgondia.com")
+        append("(including call time, duration, and number) to our server at https://businesscallmanager.onrender.com")
         append("All data is encrypted during transmission and handled with strict confidentiality. ")
         append("We do not collect audio recordings or SMS content. ")
         append("For full details, please review our ")

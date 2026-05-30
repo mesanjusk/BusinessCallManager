@@ -14,7 +14,7 @@ object Constant {
         const val VerifyOtpUiName =  "otp_verify"
     }
     object Urls{
-        const val termsAndCond = "https://btgondia.com/tnc"
-        const val privacyPolicy = "https://btgondia.com/Privacy_Policy"
+        const val termsAndCond = "https://businesscallmanager.onrender.com/TnC"
+        const val privacyPolicy = "https://businesscallmanager.onrender.com/Privacy_Policy"
     }
 }
