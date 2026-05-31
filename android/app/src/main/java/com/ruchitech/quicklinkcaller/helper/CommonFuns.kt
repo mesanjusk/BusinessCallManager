@@ -43,6 +43,7 @@ import com.ruchitech.quicklinkcaller.workers.ContactSyncWorker
 import com.ruchitech.quicklinkcaller.workers.DeleteContactSyncWorker
 import com.ruchitech.quicklinkcaller.workers.ReminderSyncWorker
 import com.ruchitech.quicklinkcaller.workers.UpdateCallLogsSyncWorker
+import com.ruchitech.quicklinkcaller.workers.AppLogsSyncWorker
 import com.ruchitech.quicklinkcaller.workers.UpdateContactSyncWorker
 import io.michaelrocks.libphonenumber.android.NumberParseException
 import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
@@ -878,4 +879,14 @@ fun isColorDark(color: Color): Boolean {
     val darkness =
         1 - (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue)
     return darkness >= 0.5
+}
+
+fun syncAppLogs() {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+    val syncWorkRequest = OneTimeWorkRequestBuilder<AppLogsSyncWorker>()
+        .setConstraints(constraints)
+        .build()
+    WorkManager.getInstance().enqueueUniqueWork("syncAppLogs", ExistingWorkPolicy.REPLACE, syncWorkRequest)
 }
