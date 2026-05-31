@@ -12,6 +12,14 @@ object Constant {
         const val AnalyticsRoute = "call_analytics_screen"
         const val OtpRequestRouteName =  "otp_request_name"
         const val VerifyOtpUiName =  "otp_verify"
+        const val LeadListRoute = "lead_list_screen"
+        const val LeadDetailRoute = "lead_detail_screen/{leadUuid}"
+        const val PipelineRoute = "pipeline_screen"
+        const val TeamManagementRoute = "team_management_screen"
+        const val BusinessSetupRoute = "business_setup_screen"
+        const val JoinBusinessRoute = "join_business_screen"
+        const val TasksRoute = "tasks_screen"
+        const val UpgradeRoute = "upgrade_screen"
     }
     object Urls{
         const val termsAndCond = "https://businesscallmanager.onrender.com/TnC"

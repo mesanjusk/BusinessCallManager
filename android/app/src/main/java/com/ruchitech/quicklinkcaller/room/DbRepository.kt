@@ -17,4 +17,7 @@ class DbRepository @Inject constructor(
     val timestampDao = databaseDao.timestampDao()
     val reminder = databaseDao.reminders()
     val tempData = databaseDao.tempData()
+    val leadDao = databaseDao.leadDao()
+    val taskDao = databaseDao.taskDao()
+    val businessDao = databaseDao.businessDao()
 }
