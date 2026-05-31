@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.ruchitech.quicklinkcaller.navhost.Screen
+import com.ruchitech.quicklinkcaller.navhost.routes.AnalyticsRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.BusinessSetupRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.ChildCallLogRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.DefaultDialerRoute
