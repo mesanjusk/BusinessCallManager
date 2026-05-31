@@ -30,7 +30,13 @@ jobs:
 
       - name: Build Prod Release APK + AAB
         working-directory: android
-        run: ./gradlew assembleProdRelease bundleProdRelease 2>&1 | tee /tmp/build_output.txt; BUILD_EXIT=${PIPESTATUS[0]}; echo ""; echo "=== COMPILER ERRORS ==="; grep -E "^e: |error:|\.kt:[0-9]" /tmp/build_output.txt | head -40 || true; exit $BUILD_EXIT
+        run: |
+          ./gradlew assembleProdRelease bundleProdRelease 2>&1 | tee /tmp/build_output.txt
+          BUILD_EXIT=${PIPESTATUS[0]}
+          echo ""
+          echo "=== COMPILER ERRORS ==="
+          grep -E "^e: |error:|\.kt:[0-9]" /tmp/build_output.txt | head -40 || true
+          exit $BUILD_EXIT
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
