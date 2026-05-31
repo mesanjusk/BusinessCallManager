@@ -128,6 +128,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     val compose_version = "1.8.3"
     val nav_version = "2.7.6"
+    implementation("androidx.compose.material:material-icons-extended:$compose_version")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
