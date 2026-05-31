@@ -19,3 +19,4 @@ backend/*.log
 # General
 .DS_Store
 Thumbs.db
+.claude/
