@@ -105,6 +105,7 @@ import com.ruchitech.quicklinkcaller.helper.shareContact
 import com.ruchitech.quicklinkcaller.helper.syncUpdateCallLogs
 import com.ruchitech.quicklinkcaller.persistence.McsConstants
 import com.ruchitech.quicklinkcaller.persistence.recievers.AlarmReceiver
+import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_ADD_LEAD
 import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_ADD_NOTE
 import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_CALL
 import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_COPY_NUMBER
@@ -115,6 +116,7 @@ import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.
 import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_TEXT_MSG
 import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.Companion.ACTION_WHATSAPP
 import com.ruchitech.quicklinkcaller.room.DbRepository
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.room.data.Reminders
 import com.ruchitech.quicklinkcaller.room.data.Tasks
 import com.ruchitech.quicklinkcaller.room.data.TempDataEntity
@@ -202,6 +204,35 @@ class PostCallActivity : ComponentActivity() {
 
             val scope = rememberCoroutineScope()
             when (intent.action) {
+
+                ACTION_ADD_LEAD -> {
+                    AddLeadDialog(
+                        phone = number ?: "",
+                        onDismiss = { finish() },
+                        onSave = { name, status ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val userUuid = appPreference.userId ?: return@launch
+                                val lead = Lead(
+                                    lead_uuid = java.util.UUID.randomUUID().toString(),
+                                    user_uuid = userUuid,
+                                    phone = number ?: "",
+                                    name = name.ifBlank { null },
+                                    source = "call",
+                                    status = status
+                                )
+                                dbRepository.leadDao.insertLead(lead)
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    android.widget.Toast.makeText(
+                                        this@PostCallActivity,
+                                        "Lead saved!",
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                    finish()
+                                }
+                            }
+                        }
+                    )
+                }
 
                 ACTION_TEXT_MSG -> {
                     number?.let { sendTextMessage(it) }
@@ -1033,6 +1064,69 @@ class PostCallActivity : ComponentActivity() {
         }
 
 
+    }
+
+    @Composable
+    fun AddLeadDialog(phone: String, onDismiss: () -> Unit, onSave: (name: String, status: String) -> Unit) {
+        var name by remember { mutableStateOf("") }
+        var status by remember { mutableStateOf("New") }
+        val stages = listOf("New", "Contacted", "Interested")
+        val stageColors = mapOf(
+            "New" to android.graphics.Color.parseColor("#607D8B"),
+            "Contacted" to android.graphics.Color.parseColor("#1E88E5"),
+            "Interested" to android.graphics.Color.parseColor("#7B1FA2")
+        )
+        Dialog(onDismissRequest = onDismiss) {
+            androidx.compose.material3.Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(0xFF162032))
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Add Lead", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                        IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null, tint = Color.Gray) }
+                    }
+                    Text(phone, color = androidx.compose.ui.graphics.Color(0xFF1E88E5), fontSize = 14.sp)
+                    androidx.compose.material3.OutlinedTextField(
+                        value = name, onValueChange = { name = it },
+                        label = { Text("Name (optional)", color = Color.Gray) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = androidx.compose.ui.graphics.Color(0xFF1E88E5),
+                            unfocusedBorderColor = androidx.compose.ui.graphics.Color(0xFF1E2D40),
+                            focusedTextColor = Color.White, unfocusedTextColor = Color.White
+                        )
+                    )
+                    Text("Initial Stage", color = Color.Gray, fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        stages.forEach { s ->
+                            val isSelected = status == s
+                            androidx.compose.material3.FilterChip(
+                                selected = isSelected,
+                                onClick = { status = s },
+                                label = { Text(s, fontSize = 11.sp) },
+                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = androidx.compose.ui.graphics.Color(0xFF1E88E5),
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        androidx.compose.material3.TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                            Text("Skip", color = Color.Gray)
+                        }
+                        androidx.compose.material3.Button(
+                            onClick = { onSave(name, status) },
+                            modifier = Modifier.weight(1f),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF1E88E5)),
+                            shape = RoundedCornerShape(50.dp)
+                        ) { Text("Save Lead", color = Color.White) }
+                    }
+                }
+            }
+        }
     }
 
     @Composable

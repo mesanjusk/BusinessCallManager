@@ -7,6 +7,11 @@ const otpRouter = require("./routes/otp.routes.js")
 const callLogRouter = require("./routes/callLog.routes.js")
 const secondaryContactRouter = require("./routes/secondaryContact.routes.js")
 const appLogRouter = require("./routes/appLog.routes.js")
+const leadRouter = require("./routes/lead.routes.js")
+const businessRouter = require("./routes/business.routes.js")
+const taskRouter = require("./routes/task.routes.js")
+const reportsRouter = require("./routes/reports.routes.js")
+const subscriptionRouter = require("./routes/subscription.routes.js")
 
 const app = express()
 app.use(
@@ -30,6 +35,11 @@ app.use("/otp", otpRouter)
 app.use("/secondaryContacts", secondaryContactRouter)
 app.use("/logs", callLogRouter)
 app.use("/appLogs", appLogRouter)
+app.use("/leads", leadRouter)
+app.use("/business", businessRouter)
+app.use("/tasks", taskRouter)
+app.use("/reports", reportsRouter)
+app.use("/subscription", subscriptionRouter)
 
 app.post("/DeleteMyData", async (req, res) => {
 	try {

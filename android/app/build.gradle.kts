@@ -26,8 +26,8 @@ android {
         applicationId = "com.ruchitech.quicklinkcaller"
         minSdk = 23
         targetSdk = 36
-        versionCode = 31
-        versionName = "1.31"
+        versionCode = 32
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

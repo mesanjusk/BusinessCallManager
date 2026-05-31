@@ -37,6 +37,22 @@ interface AppService {
         private const val FETCH_CALL_LOGS_BY_DATE = "logs/getAllLogs"
         private const val DELETE_USER = "secondaryContacts/deleteUser"
         private const val SYNC_APP_LOGS = "appLogs"
+        private const val CREATE_LEAD = "leads/createLead"
+        private const val UPDATE_LEAD = "leads/updateLead"
+        private const val FETCH_LEADS = "leads/fetchLeads"
+        private const val DELETE_LEAD = "leads/deleteLead"
+        private const val CREATE_BUSINESS = "business/create"
+        private const val JOIN_BUSINESS = "business/join"
+        private const val GET_TEAM = "business/getTeam"
+        private const val GET_MY_BUSINESS = "business/getMyBusiness"
+        private const val CREATE_TASK = "tasks/createTask"
+        private const val UPDATE_TASK = "tasks/updateTask"
+        private const val FETCH_MY_TASKS = "tasks/fetchMyTasks"
+        private const val FETCH_TEAM_TASKS = "tasks/fetchTeamTasks"
+        private const val REPORTS_SUMMARY = "reports/summary"
+        private const val SUBSCRIPTION_STATUS = "subscription/status"
+        private const val SUBSCRIPTION_UPGRADE = "subscription/upgrade"
+        private const val SEND_FOLLOWUP = "leads/sendFollowup"
 
     }
 
@@ -71,6 +87,54 @@ interface AppService {
 
     @POST(SYNC_APP_LOGS)
     fun syncAppLogs(@Body body: AppLogRequest): Flow<ApiResponse<com.ruchitech.quicklinkcaller.retrofit.model.BaseResponse>>
+
+    @POST(CREATE_LEAD)
+    fun createLead(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(UPDATE_LEAD)
+    fun updateLead(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(FETCH_LEADS)
+    fun fetchLeads(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(DELETE_LEAD)
+    fun deleteLead(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(CREATE_BUSINESS)
+    fun createBusiness(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(JOIN_BUSINESS)
+    fun joinBusiness(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(GET_TEAM)
+    fun getTeam(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(GET_MY_BUSINESS)
+    fun getMyBusiness(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(CREATE_TASK)
+    fun createTask(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(UPDATE_TASK)
+    fun updateTask(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(FETCH_MY_TASKS)
+    fun fetchMyTasks(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(FETCH_TEAM_TASKS)
+    fun fetchTeamTasks(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(REPORTS_SUMMARY)
+    fun getReportsSummary(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @GET(SUBSCRIPTION_STATUS)
+    fun getSubscriptionStatus(@Query("user_uuid") userUuid: String): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(SUBSCRIPTION_UPGRADE)
+    fun upgradeSubscription(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
+
+    @POST(SEND_FOLLOWUP)
+    fun sendFollowup(@Body body: HashMap<String, Any>): Flow<ApiResponse<Map<String, Any>>>
 
 }
 

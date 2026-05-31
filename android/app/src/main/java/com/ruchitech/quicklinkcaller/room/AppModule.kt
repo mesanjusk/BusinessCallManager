@@ -47,6 +47,55 @@ object AppModule {
         }
     }
 
+    private val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""CREATE TABLE IF NOT EXISTS leads (
+                lead_uuid TEXT NOT NULL PRIMARY KEY,
+                user_uuid TEXT NOT NULL,
+                business_uuid TEXT,
+                phone TEXT NOT NULL,
+                name TEXT,
+                source TEXT NOT NULL DEFAULT 'call',
+                status TEXT NOT NULL DEFAULT 'New',
+                notes TEXT NOT NULL DEFAULT '[]',
+                next_follow_up INTEGER,
+                call_refs TEXT NOT NULL DEFAULT '[]',
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                isSynced INTEGER NOT NULL DEFAULT 0
+            )""")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_leads_phone ON leads (phone)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_leads_status ON leads (status)")
+            db.execSQL("""CREATE TABLE IF NOT EXISTS tasks (
+                task_uuid TEXT NOT NULL PRIMARY KEY,
+                business_uuid TEXT,
+                created_by_uuid TEXT NOT NULL,
+                assigned_to_uuid TEXT NOT NULL,
+                lead_uuid TEXT,
+                call_ref TEXT,
+                title TEXT NOT NULL,
+                description TEXT,
+                due_date INTEGER,
+                priority TEXT NOT NULL DEFAULT 'Medium',
+                status TEXT NOT NULL DEFAULT 'Pending',
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                isSynced INTEGER NOT NULL DEFAULT 0
+            )""")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_tasks_assigned_to_uuid ON tasks (assigned_to_uuid)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_tasks_status ON tasks (status)")
+            db.execSQL("""CREATE TABLE IF NOT EXISTS business (
+                business_uuid TEXT NOT NULL PRIMARY KEY,
+                owner_uuid TEXT NOT NULL,
+                business_name TEXT NOT NULL,
+                plan TEXT NOT NULL DEFAULT 'free',
+                subscription_expiry INTEGER,
+                team_members_json TEXT NOT NULL DEFAULT '[]',
+                invite_code TEXT NOT NULL,
+                created_at INTEGER NOT NULL
+            )""")
+        }
+    }
 
 
     @Singleton
@@ -61,6 +110,7 @@ object AppModule {
         .addMigrations(MIGRATION_10_11)
         .addMigrations(MIGRATION_11_12)
         .addMigrations(MIGRATION_12_13)
+        .addMigrations(MIGRATION_13_14)
         .build()
 
 
