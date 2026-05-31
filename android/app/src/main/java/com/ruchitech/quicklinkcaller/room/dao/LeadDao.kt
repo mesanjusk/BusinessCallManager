@@ -28,7 +28,7 @@ interface LeadDao {
     suspend fun updateSyncStatus(leadUuid: String, synced: Boolean)
 
     @Query("UPDATE leads SET status = :status, updated_at = :updatedAt WHERE lead_uuid = :leadUuid")
-    suspend fun updateLeadStatus(leadUuid: String, status: String, updatedAt: Long = System.currentTimeMillis())
+    suspend fun updateLeadStatus(leadUuid: String, status: String, updatedAt: Long)
 
     @Delete
     suspend fun deleteLead(lead: Lead)

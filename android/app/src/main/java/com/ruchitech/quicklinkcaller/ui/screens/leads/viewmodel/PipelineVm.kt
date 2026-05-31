@@ -35,7 +35,7 @@ class PipelineVm @Inject constructor(
 
     fun moveToStage(lead: Lead, newStatus: String) {
         viewModelScope.launch {
-            dbRepository.leadDao.updateLeadStatus(lead.lead_uuid, newStatus)
+            dbRepository.leadDao.updateLeadStatus(lead.lead_uuid, newStatus, System.currentTimeMillis())
         }
     }
 }

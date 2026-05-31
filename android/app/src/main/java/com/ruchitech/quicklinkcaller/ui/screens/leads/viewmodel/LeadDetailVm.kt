@@ -33,7 +33,7 @@ class LeadDetailVm @Inject constructor(
 
     fun updateStatus(newStatus: String) {
         viewModelScope.launch {
-            dbRepository.leadDao.updateLeadStatus(leadUuid, newStatus)
+            dbRepository.leadDao.updateLeadStatus(leadUuid, newStatus, System.currentTimeMillis())
             _lead.value = dbRepository.leadDao.getLeadById(leadUuid)
         }
     }
