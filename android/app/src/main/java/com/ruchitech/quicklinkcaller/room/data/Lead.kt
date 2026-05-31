@@ -8,15 +8,15 @@ import androidx.room.PrimaryKey
 data class Lead(
     @PrimaryKey val lead_uuid: String,
     val user_uuid: String,
-    val business_uuid: String? = null,
     val phone: String,
-    val name: String? = null,
-    val source: String = "call", // "call" | "manual"
-    val status: String = "New", // New|Contacted|Interested|Negotiation|Won|Lost
-    val notes: String = "[]", // JSON string of notes list
-    val next_follow_up: Long? = null, // epoch millis
-    val call_refs: String = "[]", // JSON string of call IDs
     val created_at: Long = System.currentTimeMillis(),
     val updated_at: Long = System.currentTimeMillis(),
+    val business_uuid: String? = null,
+    val name: String? = null,
+    val source: String = "call",
+    val status: String = "New",
+    val notes: String = "[]",
+    val next_follow_up: Long? = null,
+    val call_refs: String = "[]",
     val isSynced: Boolean = false
 )
