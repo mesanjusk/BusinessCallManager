@@ -52,6 +52,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.otp.viewmodel.OtpVerifyVM
 import com.ruchitech.quicklinkcaller.ui.theme.TextColor
 import com.ruchitech.quicklinkcaller.ui.theme.TextFieldBg
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_medium
@@ -65,7 +66,7 @@ fun OtpVerifyUi(viewModel: OtpVerifyVM) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(NavyPrimary),
         contentAlignment = Alignment.TopCenter
     ) {
         Column {

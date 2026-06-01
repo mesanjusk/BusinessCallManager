@@ -69,7 +69,12 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.screens.notesandreminders.viewmodel.NoteAndReminderVm
+import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
+import com.ruchitech.quicklinkcaller.ui.theme.TextPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.TextSecondary
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_medium
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_semibold
 import com.ruchitech.quicklinkcaller.ui.theme.normalGoogleSansStyle
@@ -228,7 +233,7 @@ fun HomeScreen(viewModel: HomeVm) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color.White)
+                .background(color = NavyPrimary)
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             Row(
@@ -297,7 +302,7 @@ fun HomeScreen(viewModel: HomeVm) {
                         properties = PopupProperties(clippingEnabled = false),
                         modifier = Modifier
                             .wrapContentWidth()
-                            .background(Color.White)
+                            .background(NavyElevated)
                             .padding(end = 10.dp)
                     ) {
                         DropdownMenuItem(onClick = {
@@ -305,21 +310,21 @@ fun HomeScreen(viewModel: HomeVm) {
                             showSaveInappDialog = true
                             //  viewModel.exportCallLogsIntoPdf()
                         }, text = {
-                            Text("Create New Contact", fontFamily = montserrat_semibold)
+                            Text("Create New Contact", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
                             expanded = false
                             backupLauncher.launch("quicklink_caller_backup.db")
                         }, text = {
-                            Text("Backup Data", fontFamily = montserrat_semibold)
+                            Text("Backup Data", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
                             expanded = false
                             restoreLauncher.launch(arrayOf("*/*"))
                         }, text = {
-                            Text("Restore Data", fontFamily = montserrat_semibold)
+                            Text("Restore Data", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
@@ -328,7 +333,7 @@ fun HomeScreen(viewModel: HomeVm) {
                             viewModel.exportType.intValue = 1
                             //  viewModel.exportCallLogsIntoPdf()
                         }, text = {
-                            Text("Export Logs in xlsx", fontFamily = montserrat_semibold)
+                            Text("Export Logs in xlsx", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
@@ -337,28 +342,28 @@ fun HomeScreen(viewModel: HomeVm) {
                             viewModel.exportType.intValue = 0
                             //  viewModel.exportCallLogsIntoPdf()
                         }, text = {
-                            Text("Export Logs in pdf", fontFamily = montserrat_semibold)
+                            Text("Export Logs in pdf", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
                             expanded = false
                             viewModel.exportContactsIntoPdf()
                         }, text = {
-                            Text("Export Contacts in pdf", fontFamily = montserrat_semibold)
+                            Text("Export Contacts in pdf", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
                             expanded = false
                             viewModel.exportContactsIntoVcf()
                         }, text = {
-                            Text("Export Contacts in Vcf", fontFamily = montserrat_semibold)
+                            Text("Export Contacts in Vcf", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DropdownMenuItem(onClick = {
                             expanded = false
                             viewModel.navigateToAnalytics()
                         }, text = {
-                            Text("Call Analytics", fontFamily = montserrat_semibold)
+                            Text("Call Analytics", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DefaultDialerMenuItem(
@@ -378,7 +383,7 @@ fun HomeScreen(viewModel: HomeVm) {
                             intent.putExtra("type", "Privacy Policy")
                             context.startActivity(intent)
                         }, text = {
-                            Text("Privacy Policy", fontFamily = montserrat_semibold)
+                            Text("Privacy Policy", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         /*        DropdownMenuItem(onClick = {
                                     expanded = false
@@ -406,8 +411,8 @@ fun HomeScreen(viewModel: HomeVm) {
             Spacer(modifier = Modifier.height(10.dp))
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
-                contentColor = Color.White,
-                containerColor = Color.White,
+                contentColor = TextPrimary,
+                containerColor = NavySurface,
                 divider = {
                     Divider(thickness = 0.dp, color = Color.Transparent)
                 },
@@ -424,9 +429,7 @@ fun HomeScreen(viewModel: HomeVm) {
                         text = {
                             Text(
                                 tab.title,
-                                color = if (pagerState.currentPage == index) PurpleSolid else Color(
-                                    0xFF333333
-                                ),
+                                color = if (pagerState.currentPage == index) PurpleSolid else TextSecondary,
                                 style = normalGoogleSansStyle.copy(fontFamily = google_sans_medium),
                                 textAlign = if (index == 0) TextAlign.Start else if (index == 1) TextAlign.Center else TextAlign.End,
                                 fontSize = 15.sp.nonScaledSp,
