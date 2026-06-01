@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.ruchitech.quicklinkcaller.navhost.Screen
+import com.ruchitech.quicklinkcaller.navhost.routes.ActivityRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.AnalyticsRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.BusinessSetupRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.ChildCallLogRoute
@@ -57,6 +58,7 @@ fun NavigationComponent(
         LeadDetailRoute.composable(this, navHostController, snackbarHostState)
         TasksRoute.composable(this, navHostController, snackbarHostState)
         TeamManagementRoute.composable(this, navHostController, snackbarHostState)
+        ActivityRoute.composable(this, navHostController, snackbarHostState)
         BusinessSetupRoute.composable(this, navHostController, snackbarHostState)
         JoinBusinessRoute.composable(this, navHostController, snackbarHostState)
         UpgradeRoute.composable(this, navHostController, snackbarHostState)

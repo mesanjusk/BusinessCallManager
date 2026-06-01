@@ -4,9 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import com.ruchitech.quicklinkcaller.helper.AppPreference
 import com.ruchitech.quicklinkcaller.navhost.nav.RouteNavigator
 import com.ruchitech.quicklinkcaller.room.DbRepository
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.ui.screens.SharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,16 +29,17 @@ enum class ActivityDateFilter(val label: String) {
 class ActivityViewModel @Inject constructor(
     private val routeNavigator: RouteNavigator,
     private val dbRepository: DbRepository,
+    private val appPreference: AppPreference,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
 
     private val _allCallLogs = MutableStateFlow<List<CallLogDetails>>(emptyList())
     val allCallLogs: StateFlow<List<CallLogDetails>> = _allCallLogs.asStateFlow()
 
-    private val _whatsappLogs = MutableStateFlow<List<CallLogDetails>>(emptyList())
-    val whatsappLogs: StateFlow<List<CallLogDetails>> = _whatsappLogs.asStateFlow()
+    private val _whatsappMessages = MutableStateFlow<List<Lead>>(emptyList())
+    val whatsappMessages: StateFlow<List<Lead>> = _whatsappMessages.asStateFlow()
 
-    private val _whatsappCallLogs = MutableStateFlow<List<CallLogDetails>>(emptyList())
-    val whatsappCallLogs: StateFlow<List<CallLogDetails>> = _whatsappCallLogs.asStateFlow()
+    private val _whatsappCalls = MutableStateFlow<List<Lead>>(emptyList())
+    val whatsappCalls: StateFlow<List<Lead>> = _whatsappCalls.asStateFlow()
 
     var selectedFilter by mutableStateOf(ActivityDateFilter.TODAY)
         private set
@@ -67,13 +70,13 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             val (start, end) = getDateRange()
             val logs = dbRepository.callLogDao.getCallLogsBetween(start, end)
-            val sorted = logs.sortedByDescending { it.date }
-            _allCallLogs.value = sorted
-            _whatsappLogs.value = sorted.distinctBy { it.callerId }
-            _whatsappCallLogs.value = sorted.filter {
-                it.type == com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType.OUTGOING ||
-                it.type == com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType.INCOMING
-            }
+            _allCallLogs.value = logs.sortedByDescending { it.date }
+
+            _whatsappMessages.value = dbRepository.leadDao
+                .getLeadsBySourceBetween("whatsapp", start, end)
+
+            _whatsappCalls.value = dbRepository.leadDao
+                .getLeadsBySourceBetween("whatsapp_call", start, end)
         }
     }
 

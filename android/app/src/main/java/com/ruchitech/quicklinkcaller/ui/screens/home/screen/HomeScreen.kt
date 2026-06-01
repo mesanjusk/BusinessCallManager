@@ -67,7 +67,6 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.CircularLoadingIndic
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.TriStateToggle
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
-import com.ruchitech.quicklinkcaller.ui.screens.activity.ActivityViewModel
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.screens.notesandreminders.viewmodel.NoteAndReminderVm
 import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
@@ -154,7 +153,6 @@ fun DefaultDialerMenuItem(
 @Composable
 fun HomeScreen(viewModel: HomeVm) {
     val noteAndReminderVm: NoteAndReminderVm = hiltViewModel()
-    val activityVm: ActivityViewModel = hiltViewModel()
     val circularLoadingIndicator by viewModel.circularLoadingIndicator.collectAsState()
     val pagerState = com.google.accompanist.pager.rememberPagerState()
     var showSaveInappDialog by remember {
@@ -165,7 +163,6 @@ fun HomeScreen(viewModel: HomeVm) {
         TabItem.NotesTab(noteAndReminderVm),
         TabItem.CallLogTab(viewModel),
         TabItem.ShowContactsTab(viewModel),
-        TabItem.ActivityTab(activityVm),
     )
     var expanded by remember {
         mutableStateOf(false)

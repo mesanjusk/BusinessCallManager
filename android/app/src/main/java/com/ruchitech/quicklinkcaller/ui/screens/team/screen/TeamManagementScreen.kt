@@ -24,7 +24,7 @@ import com.ruchitech.quicklinkcaller.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeamManagementScreen(viewModel: TeamManagementVm) {
+fun TeamManagementScreen(viewModel: TeamManagementVm, showBackButton: Boolean = false) {
     val business by viewModel.business.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var showAddMemberDialog by remember { mutableStateOf(false) }
@@ -35,7 +35,9 @@ fun TeamManagementScreen(viewModel: TeamManagementVm) {
         topBar = {
             TopAppBar(
                 title = { Text("Team", fontWeight = FontWeight.Bold, color = TextPrimary) },
-                navigationIcon = { IconButton(onClick = viewModel::navigateUp) { Icon(Icons.Default.ArrowBack, null, tint = TextPrimary) } },
+                navigationIcon = if (showBackButton) {
+                    { IconButton(onClick = viewModel::navigateUp) { Icon(Icons.Default.ArrowBack, null, tint = TextPrimary) } }
+                } else { {} },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = NavyPrimary)
             )
         }

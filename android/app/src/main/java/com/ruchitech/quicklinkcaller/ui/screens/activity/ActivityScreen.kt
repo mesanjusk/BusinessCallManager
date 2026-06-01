@@ -27,10 +27,17 @@ import com.ruchitech.quicklinkcaller.R
 import com.ruchitech.quicklinkcaller.helper.makePhoneCall
 import com.ruchitech.quicklinkcaller.helper.openWhatsapp
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
-import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
+import com.ruchitech.quicklinkcaller.ui.theme.DividerColor
+import com.ruchitech.quicklinkcaller.ui.theme.ElectricBlue
+import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
+import com.ruchitech.quicklinkcaller.ui.theme.TextPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.TextSecondary
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_medium
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_semibold
 import kotlinx.coroutines.launch
@@ -42,8 +49,8 @@ import java.util.Locale
 @Composable
 fun ActivityScreen(viewModel: ActivityViewModel) {
     val allCallLogs by viewModel.allCallLogs.collectAsState()
-    val whatsappLogs by viewModel.whatsappLogs.collectAsState()
-    val whatsappCallLogs by viewModel.whatsappCallLogs.collectAsState()
+    val whatsappMessages by viewModel.whatsappMessages.collectAsState()
+    val whatsappCalls by viewModel.whatsappCalls.collectAsState()
 
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
@@ -63,10 +70,16 @@ fun ActivityScreen(viewModel: ActivityViewModel) {
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(NavyPrimary)
+    ) {
+        // Date filter chips
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(NavySurface)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -89,22 +102,25 @@ fun ActivityScreen(viewModel: ActivityViewModel) {
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = PurpleSolid,
+                        selectedContainerColor = ElectricBlue,
                         selectedLabelColor = Color.White,
+                        labelColor = TextSecondary,
+                        containerColor = NavyElevated,
                     )
                 )
             }
         }
 
+        // Sub-tab row
         TabRow(
             selectedTabIndex = pagerState.currentPage,
-            contentColor = Color.White,
-            containerColor = Color.White,
+            contentColor = TextPrimary,
+            containerColor = NavySurface,
             divider = { Divider(thickness = 0.dp, color = Color.Transparent) },
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                    color = PurpleSolid,
+                    color = ElectricBlue,
                 )
             }
         ) {
@@ -115,7 +131,7 @@ fun ActivityScreen(viewModel: ActivityViewModel) {
                     text = {
                         Text(
                             title,
-                            color = if (pagerState.currentPage == index) PurpleSolid else Color(0xFF333333),
+                            color = if (pagerState.currentPage == index) ElectricBlue else TextSecondary,
                             fontFamily = google_sans_medium,
                             fontSize = 13.sp.nonScaledSp
                         )
@@ -128,21 +144,17 @@ fun ActivityScreen(viewModel: ActivityViewModel) {
             when (page) {
                 0 -> CallLogsList(
                     logs = allCallLogs,
-                    emptyMessage = "No call logs for this period",
-                    showCallButton = true,
-                    showWhatsAppButton = false
+                    emptyMessage = "No call logs for this period"
                 )
-                1 -> CallLogsList(
-                    logs = whatsappLogs,
-                    emptyMessage = "No WhatsApp activity for this period",
-                    showCallButton = false,
-                    showWhatsAppButton = true
+                1 -> WhatsAppLeadsList(
+                    leads = whatsappMessages,
+                    emptyMessage = "No WhatsApp messages for this period",
+                    isCall = false
                 )
-                2 -> CallLogsList(
-                    logs = whatsappCallLogs,
+                2 -> WhatsAppLeadsList(
+                    leads = whatsappCalls,
                     emptyMessage = "No WhatsApp calls for this period",
-                    showCallButton = false,
-                    showWhatsAppButton = true
+                    isCall = true
                 )
             }
         }
@@ -153,60 +165,79 @@ fun ActivityScreen(viewModel: ActivityViewModel) {
 private fun CallLogsList(
     logs: List<CallLogDetails>,
     emptyMessage: String,
-    showCallButton: Boolean,
-    showWhatsAppButton: Boolean,
 ) {
     val context = LocalContext.current
 
     if (logs.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = null,
-                    tint = Color(0xFFCCCCCC),
-                    modifier = Modifier.size(56.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = emptyMessage,
-                    color = Color(0xFF888888),
-                    fontSize = 14.sp,
-                    fontFamily = montserrat_semibold
-                )
-            }
-        }
+        EmptyState(icon = { Icon(Icons.Default.Call, null, tint = Color(0xFFCCCCCC), modifier = Modifier.size(56.dp)) }, message = emptyMessage)
         return
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize().background(NavyPrimary)) {
         items(logs) { log ->
-            ActivityLogItem(
+            CallLogItem(
                 log = log,
-                showCallButton = showCallButton,
-                showWhatsAppButton = showWhatsAppButton,
                 onCall = { context.makePhoneCall(log.number) },
                 onWhatsApp = { context.openWhatsapp(log.number) }
             )
-            Divider(thickness = 0.5.dp, color = Color(0xFFEEEEEE))
+            Divider(thickness = 0.5.dp, color = DividerColor)
         }
     }
 }
 
 @Composable
-private fun ActivityLogItem(
+private fun WhatsAppLeadsList(
+    leads: List<Lead>,
+    emptyMessage: String,
+    isCall: Boolean,
+) {
+    val context = LocalContext.current
+
+    if (leads.isEmpty()) {
+        val icon: @Composable () -> Unit = {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_whatsapp),
+                contentDescription = null,
+                tint = Color(0xFFCCCCCC),
+                modifier = Modifier.size(56.dp)
+            )
+        }
+        EmptyState(icon = icon, message = emptyMessage)
+        return
+    }
+
+    LazyColumn(modifier = Modifier.fillMaxSize().background(NavyPrimary)) {
+        items(leads) { lead ->
+            WhatsAppLeadItem(
+                lead = lead,
+                isCall = isCall,
+                onWhatsApp = { context.openWhatsapp(lead.phone) }
+            )
+            Divider(thickness = 0.5.dp, color = DividerColor)
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(icon: @Composable () -> Unit, message: String) {
+    Box(modifier = Modifier.fillMaxSize().background(NavyPrimary), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            icon()
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = message, color = TextSecondary, fontSize = 14.sp, fontFamily = montserrat_semibold)
+        }
+    }
+}
+
+@Composable
+private fun CallLogItem(
     log: CallLogDetails,
-    showCallButton: Boolean,
-    showWhatsAppButton: Boolean,
     onCall: () -> Unit,
     onWhatsApp: () -> Unit,
 ) {
     val typeColor = when (log.type) {
         CallType.INCOMING -> Color(0xFF4CAF50)
-        CallType.OUTGOING -> PurpleSolid
+        CallType.OUTGOING -> ElectricBlue
         else -> Color(0xFFF44336)
     }
     val typeLabel = when (log.type) {
@@ -227,78 +258,92 @@ private fun ActivityLogItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(NavySurface)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(Color(0xFF454545), CircleShape),
+            modifier = Modifier.size(44.dp).background(NavyElevated, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = displayName.take(1).uppercase(),
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(displayName.take(1).uppercase(), color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
-
         Spacer(modifier = Modifier.width(12.dp))
-
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = displayName,
-                fontFamily = montserrat_semibold,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = Color(0xFF111111)
-            )
+            Text(displayName, fontFamily = montserrat_semibold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = TextPrimary)
             Spacer(modifier = Modifier.height(2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .background(typeColor.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                    modifier = Modifier.background(typeColor.copy(alpha = 0.12f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(typeLabel, color = typeColor, fontSize = 11.sp.nonScaledSp)
                 }
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = dateStr,
-                    fontSize = 11.sp,
-                    color = Color(0xFF888888)
-                )
+                Text(dateStr, fontSize = 11.sp, color = TextSecondary)
             }
             if (log.duration > 0) {
-                Text(
-                    text = durationStr,
-                    fontSize = 11.sp,
-                    color = Color(0xFFAAAAAA)
-                )
+                Text(durationStr, fontSize = 11.sp, color = TextSecondary)
             }
         }
+        IconButton(onClick = onCall, modifier = Modifier.size(36.dp)) {
+            Icon(Icons.Default.Call, contentDescription = "Call", tint = ElectricBlue, modifier = Modifier.size(20.dp))
+        }
+        IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
+            Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(20.dp))
+        }
+    }
+}
 
-        if (showCallButton) {
-            IconButton(onClick = onCall, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = "Call",
-                    tint = PurpleSolid,
-                    modifier = Modifier.size(20.dp)
-                )
+@Composable
+private fun WhatsAppLeadItem(
+    lead: Lead,
+    isCall: Boolean,
+    onWhatsApp: () -> Unit,
+) {
+    val displayName = lead.name?.takeIf { it.isNotBlank() } ?: lead.phone
+    val dateStr = remember(lead.created_at) {
+        SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(lead.created_at))
+    }
+    val badgeLabel = if (isCall) "WA Call" else "WA Message"
+    val badgeColor = Color(0xFF25D366)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(NavySurface)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.size(44.dp).background(Color(0xFF25D366).copy(alpha = 0.15f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_whatsapp),
+                contentDescription = null,
+                tint = Color(0xFF25D366),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(displayName, fontFamily = montserrat_semibold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = TextPrimary)
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.background(badgeColor.copy(alpha = 0.12f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(badgeLabel, color = badgeColor, fontSize = 11.sp.nonScaledSp)
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(dateStr, fontSize = 11.sp, color = TextSecondary)
+            }
+            if (lead.status.isNotBlank() && lead.status != "New") {
+                Text("Status: ${lead.status}", fontSize = 11.sp, color = TextSecondary)
             }
         }
-        if (showWhatsAppButton) {
-            IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_whatsapp),
-                    contentDescription = "WhatsApp",
-                    tint = Color(0xFF25D366),
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+        IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
+            Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "Open WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(22.dp))
         }
     }
 }

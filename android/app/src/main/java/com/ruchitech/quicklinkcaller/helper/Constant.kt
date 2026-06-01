@@ -20,6 +20,7 @@ object Constant {
         const val JoinBusinessRoute = "join_business_screen"
         const val TasksRoute = "tasks_screen"
         const val UpgradeRoute = "upgrade_screen"
+        const val ActivityRoute = "activity_screen"
     }
     object Urls{
         const val termsAndCond = "https://businesscallmanager.onrender.com/TnC"

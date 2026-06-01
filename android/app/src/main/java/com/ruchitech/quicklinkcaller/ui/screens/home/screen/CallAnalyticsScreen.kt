@@ -1,6 +1,5 @@
 package com.ruchitech.quicklinkcaller.ui.screens.home.screen
 
-import android.R.attr.text
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,9 +36,11 @@ import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.CallAnalyticsVm
 import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
-import com.ruchitech.quicklinkcaller.ui.theme.dimBlack
+import com.ruchitech.quicklinkcaller.ui.theme.TextPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.TextSecondary
+import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.normalGoogleSansStyle
-import org.apache.poi.hssf.usermodel.HeaderFooter.fontSize
 
 @Composable
 fun CallAnalyticsScreen(viewModel: CallAnalyticsVm) {
@@ -103,7 +104,7 @@ private fun HeaderChips(currentLabel: String, onRangeSelected: (CallAnalyticsVm.
                 label = { Text(range.label, fontSize = 12.sp) },
                 colors = AssistChipDefaults.assistChipColors(
                     containerColor = if (selected) ThemePurple.copy(alpha = 0.15f) else Color(0xFFF6F7FB),
-                    labelColor = if (selected) ThemePurple else dimBlack
+                    labelColor = if (selected) ThemePurple else TextPrimary
                 )
             )
         }
@@ -143,7 +144,7 @@ private fun StatCard(title: String, value: Int, tint: Color, modifier: Modifier 
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(title, style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.7f))
+            Text(title, style = normalGoogleSansStyle, color = TextSecondary)
             Text(
                 text = value.toString(),
                 style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
@@ -167,16 +168,16 @@ private fun TrendCard(
     val deltaText = if (isPercent) String.format("%.1f%%", delta * 100) else String.format("%.0f", delta)
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F7FB)),
+        colors = CardDefaults.cardColors(containerColor = NavyElevated),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.7f))
+            Text(title, style = normalGoogleSansStyle, color = TextSecondary)
             Text(
                 text = if (isPercent) String.format("%.0f%%", value * 100) else String.format("%.1f%s", value, suffix),
                 style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
                 fontSize = 16.sp,
-                color = dimBlack
+                color = TextPrimary
             )
             Text(
                 text = "${if (trendingUp) "▲" else "▼"} $deltaText vs prev",
@@ -218,7 +219,7 @@ private fun BarRow(values: List<Int>, maxValue: Int, labels: List<String>? = nul
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color(0xFFE9ECF2), RoundedCornerShape(4.dp)),
+                        .background(NavyElevated, RoundedCornerShape(4.dp)),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Box(
@@ -229,9 +230,9 @@ private fun BarRow(values: List<Int>, maxValue: Int, labels: List<String>? = nul
                     )
                 }
                 if (labels != null && labels.size == values.size) {
-                    Text(labels[idx], fontSize = 10.sp, color = dimBlack.copy(alpha = 0.6f))
+                    Text(labels[idx], fontSize = 10.sp, color = TextSecondary)
                 } else {
-                    Text(value.toString(), fontSize = 10.sp, color = dimBlack.copy(alpha = 0.6f))
+                    Text(value.toString(), fontSize = 10.sp, color = TextSecondary)
                 }
             }
         }
@@ -252,7 +253,7 @@ private fun Highlights(state: CallAnalyticsVm.CallAnalyticsState) {
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Best time", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.7f))
+                Text("Best time", style = normalGoogleSansStyle, color = TextSecondary)
                 Text("$hourText • $dayText", style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold))
             }
         }
@@ -262,7 +263,7 @@ private fun Highlights(state: CallAnalyticsVm.CallAnalyticsState) {
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Longest call", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.7f))
+                Text("Longest call", style = normalGoogleSansStyle, color = TextSecondary)
                 val lc = state.longestCall
                 val longestText = lc?.let {
                     "%s • %.1f min".format(it.name ?: it.number, it.durationSec / 60f)
@@ -270,7 +271,7 @@ private fun Highlights(state: CallAnalyticsVm.CallAnalyticsState) {
                 Text(
                     text = longestText,
                     style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
-                    color = dimBlack
+                    color = TextPrimary
                 )
             }
         }
@@ -280,7 +281,7 @@ private fun Highlights(state: CallAnalyticsVm.CallAnalyticsState) {
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Follow-ups pending", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.7f))
+                Text("Follow-ups pending", style = normalGoogleSansStyle, color = TextSecondary)
                 Text(
                     text = state.followUps.size.toString(),
                     style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
@@ -297,7 +298,7 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
         Text("Top numbers", style = normalGoogleSansStyle, fontWeight = FontWeight.SemiBold)
         val items = listOfNotNull(state.topByCount, state.topByDuration).distinctBy { it.number }
         if (items.isEmpty()) {
-            Text("No data for this range", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.6f))
+            Text("No data for this range", style = normalGoogleSansStyle, color = TextSecondary)
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -308,7 +309,7 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
                 items(items) { item ->
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF6F7FB)
+                        color = NavyElevated
                     ) {
                         Row(
                             modifier = Modifier
@@ -321,12 +322,12 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
                                 Text(
                                     text = item.name ?: item.number,
                                     style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium),
-                                    color = dimBlack
+                                    color = TextPrimary
                                 )
                                 Text(
                                     text = "Calls: ${item.totalCalls}  •  Last: ${formatTimeAgo(item.lastDate)}",
                                     style = normalGoogleSansStyle,
-                                    color = dimBlack.copy(alpha = 0.7f),
+                                    color = TextSecondary,
                                     fontSize = 12.sp
                                 )
                             }
@@ -343,7 +344,7 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
         Spacer(Modifier.height(10.dp))
         Text("Needs follow-up (missed, no callback)", style = normalGoogleSansStyle, fontWeight = FontWeight.SemiBold)
         if (state.followUps.isEmpty()) {
-            Text("All caught up in last 72h", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.6f))
+            Text("All caught up in last 72h", style = normalGoogleSansStyle, color = TextSecondary)
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -364,8 +365,8 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(item.name ?: item.number, style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium), color = dimBlack)
-                                Text("Missed ${formatTimeAgo(item.lastDate)} • ${item.totalCalls}x", style = normalGoogleSansStyle, fontSize = 12.sp, color = dimBlack.copy(alpha = 0.7f))
+                                Text(item.name ?: item.number, style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium), color = TextPrimary)
+                                Text("Missed ${formatTimeAgo(item.lastDate)} • ${item.totalCalls}x", style = normalGoogleSansStyle, fontSize = 12.sp, color = TextSecondary)
                             }
                             Text("Call back", style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold, color = Orange))
                         }
@@ -410,7 +411,7 @@ private fun ExtraInsights(state: CallAnalyticsVm.CallAnalyticsState) {
 
         Text("Long conversations", style = normalGoogleSansStyle, fontWeight = FontWeight.SemiBold)
         if (state.longTalkers.isEmpty()) {
-            Text("No long calls in this range", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.6f))
+            Text("No long calls in this range", style = normalGoogleSansStyle, color = TextSecondary)
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -434,14 +435,14 @@ private fun ExtraInsights(state: CallAnalyticsVm.CallAnalyticsState) {
                                 Text(
                                     talker.name ?: talker.number,
                                     style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium),
-                                    color = dimBlack
+                                    color = TextPrimary
                                 )
                                 Text(
                                     "Avg %.1f min • ${talker.calls} calls • Last ${formatTimeAgo(talker.lastDate)}"
                                         .format(talker.avgDurationSec / 60f),
                                     style = normalGoogleSansStyle,
                                     fontSize = 12.sp,
-                                    color = dimBlack.copy(alpha = 0.7f)
+                                    color = TextSecondary
                                 )
                             }
                             Text(
@@ -457,7 +458,7 @@ private fun ExtraInsights(state: CallAnalyticsVm.CallAnalyticsState) {
         Spacer(Modifier.height(10.dp))
         Text("New in this range", style = normalGoogleSansStyle, fontWeight = FontWeight.SemiBold)
         if (state.topNewContacts.isEmpty()) {
-            Text("No new contacts in this range", style = normalGoogleSansStyle, color = dimBlack.copy(alpha = 0.6f))
+            Text("No new contacts in this range", style = normalGoogleSansStyle, color = TextSecondary)
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -478,8 +479,8 @@ private fun ExtraInsights(state: CallAnalyticsVm.CallAnalyticsState) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(item.name ?: item.number, style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium), color = dimBlack)
-                                Text("Since ${formatTimeAgo(item.lastDate)} • ${item.totalCalls} calls", style = normalGoogleSansStyle, fontSize = 12.sp, color = dimBlack.copy(alpha = 0.7f))
+                                Text(item.name ?: item.number, style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Medium), color = TextPrimary)
+                                Text("Since ${formatTimeAgo(item.lastDate)} • ${item.totalCalls} calls", style = normalGoogleSansStyle, fontSize = 12.sp, color = TextSecondary)
                             }
                             Text(
                                 text = "${item.totalDuration / 60}m",

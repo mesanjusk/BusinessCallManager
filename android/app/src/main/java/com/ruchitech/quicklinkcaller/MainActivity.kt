@@ -56,10 +56,10 @@ import com.ruchitech.quicklinkcaller.helper.syncDeletedSecondaryContacts
 import com.ruchitech.quicklinkcaller.helper.syncSecondaryContacts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import com.ruchitech.quicklinkcaller.navhost.Screen
 import com.ruchitech.quicklinkcaller.navhost.nav.NavigationComponent
 import com.ruchitech.quicklinkcaller.room.data.Contact
@@ -188,8 +188,8 @@ class MainActivity : ComponentActivity() {
                                     Screen.HomeScreen.route,
                                     Screen.LeadListScreen.route,
                                     Screen.TasksScreen.route,
-                                    Screen.AnalyticsRoute.route,
-                                    Screen.SettingsRoute.route
+                                    Screen.ActivityScreen.route,
+                                    Screen.TeamManagementScreen.route
                                 )
                                 if (currentRoute in bottomNavRoutes) {
                                     NavigationBar(containerColor = NavySurface) {
@@ -222,17 +222,17 @@ class MainActivity : ComponentActivity() {
                                             colors = navColors
                                         )
                                         NavigationBarItem(
-                                            selected = currentRoute == Screen.AnalyticsRoute.route,
-                                            onClick = { navController.navigate(Screen.AnalyticsRoute.route) { launchSingleTop = true } },
-                                            icon = { Icon(Icons.Default.BarChart, contentDescription = "Analytics") },
-                                            label = { Text("Analytics") },
+                                            selected = currentRoute == Screen.ActivityScreen.route,
+                                            onClick = { navController.navigate(Screen.ActivityScreen.route) { launchSingleTop = true } },
+                                            icon = { Icon(Icons.Default.History, contentDescription = "Activity") },
+                                            label = { Text("Activity") },
                                             colors = navColors
                                         )
                                         NavigationBarItem(
-                                            selected = currentRoute == Screen.SettingsRoute.route,
-                                            onClick = { navController.navigate(Screen.SettingsRoute.route) { launchSingleTop = true } },
-                                            icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                                            label = { Text("Settings") },
+                                            selected = currentRoute == Screen.TeamManagementScreen.route,
+                                            onClick = { navController.navigate(Screen.TeamManagementScreen.route) { launchSingleTop = true } },
+                                            icon = { Icon(Icons.Default.Groups, contentDescription = "Teams") },
+                                            label = { Text("Teams") },
                                             colors = navColors
                                         )
                                     }
