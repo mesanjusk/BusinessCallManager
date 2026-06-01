@@ -100,8 +100,8 @@ fun LeadListScreen(viewModel: LeadListVm) {
     }
 
     if (showAddDialog) {
-        AddLeadDialog(onDismiss = { showAddDialog = false }, onAdd = { phone, name ->
-            viewModel.addLead(phone, name)
+        AddLeadDialog(onDismiss = { showAddDialog = false }, onAdd = { phone, name, source ->
+            viewModel.addLead(phone, name, source)
             showAddDialog = false
         })
     }
@@ -134,15 +134,18 @@ private fun LeadCard(lead: Lead, onClick: () -> Unit) {
 }
 
 @Composable
-private fun AddLeadDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Unit) {
+private fun AddLeadDialog(onDismiss: () -> Unit, onAdd: (String, String?, String) -> Unit) {
     var phone by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var selectedSource by remember { mutableStateOf("manual") }
+    val sources = listOf("manual" to "Manual", "sms" to "SMS", "whatsapp" to "WhatsApp", "call" to "Call")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = NavySurface,
         title = { Text("Add Lead", color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = phone, onValueChange = { phone = it },
                     label = { Text("Phone Number", color = TextSecondary) },
@@ -153,10 +156,31 @@ private fun AddLeadDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Uni
                     label = { Text("Name (optional)", color = TextSecondary) },
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = ElectricBlue, unfocusedBorderColor = DividerColor, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary)
                 )
+                Text("Source", color = TextSecondary, fontSize = 12.sp)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(sources) { (value, label) ->
+                        val isSelected = selectedSource == value
+                        Surface(
+                            shape = RoundedCornerShape(50.dp),
+                            color = if (isSelected) ElectricBlue else NavyElevated,
+                            modifier = Modifier.clickable { selectedSource = value }
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) Color.White else TextSecondary,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
-            Button(onClick = { if (phone.isNotBlank()) onAdd(phone, name.ifBlank { null }) }, colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)) {
+            Button(
+                onClick = { if (phone.isNotBlank()) onAdd(phone, name.ifBlank { null }, selectedSource) },
+                colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
+            ) {
                 Text("Add Lead", color = Color.White)
             }
         },

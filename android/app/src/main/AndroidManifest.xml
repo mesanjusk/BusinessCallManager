@@ -30,8 +30,6 @@
     <uses-permission android:name="android.permission.REQUEST_DEFAULT_DIALER" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO" />-->
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
 
     <queries>
@@ -191,15 +189,6 @@
         </receiver>
 
         <receiver android:name=".persistence.recievers.NotificationReceiver" />
-
-        <receiver
-            android:name=".persistence.recievers.SmsReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter android:priority="999">
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
-        </receiver>
 
         <service
             android:name=".persistence.WhatsAppNotificationListener"

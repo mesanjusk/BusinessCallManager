@@ -47,7 +47,7 @@ class LeadListVm @Inject constructor(
 
     fun openLead(leadUuid: String) = navigateToRoute(LeadDetailRoute.withArgs(leadUuid))
 
-    fun addLead(phone: String, name: String?) {
+    fun addLead(phone: String, name: String?, source: String = "manual") {
         viewModelScope.launch {
             val userUuid = appPreference.userId ?: return@launch
             val lead = Lead(
@@ -55,7 +55,7 @@ class LeadListVm @Inject constructor(
                 user_uuid = userUuid,
                 phone = phone,
                 name = name,
-                source = "manual"
+                source = source
             )
             dbRepository.leadDao.insertLead(lead)
         }
