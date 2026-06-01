@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.ruchitech.quicklinkcaller.navhost.Screen
+import com.ruchitech.quicklinkcaller.navhost.routes.AnalyticsRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.ChildCallLogRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.DefaultDialerRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.HomeRoute
@@ -16,6 +17,7 @@ import com.ruchitech.quicklinkcaller.navhost.routes.OtpRequestRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.PrepairDataRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.SettingsRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.SplashRoute
+import com.ruchitech.quicklinkcaller.navhost.routes.TeamRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.VerifyOtpRoute
 
 
@@ -43,6 +45,7 @@ fun NavigationComponent(
         NoteAndReminderRoute.composable(this, navHostController, snackbarHostState)
         DefaultDialerRoute.composable(this, navHostController, snackbarHostState)
         AnalyticsRoute.composable(this, navHostController, snackbarHostState)
+        TeamRoute.composable(this, navHostController, snackbarHostState)
 
     }
 }

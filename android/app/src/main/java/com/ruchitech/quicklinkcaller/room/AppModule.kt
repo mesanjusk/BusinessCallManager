@@ -33,7 +33,6 @@ object AppModule {
 
     private val MIGRATION_12_13 = object : Migration(12, 13) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            // Create the NotificationsQueue table
             db.execSQL(
                 """
             CREATE TABLE IF NOT EXISTS notifications_queue (
@@ -47,7 +46,33 @@ object AppModule {
         }
     }
 
-
+    private val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS team_members (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    phone TEXT NOT NULL,
+                    email TEXT NOT NULL DEFAULT '',
+                    role TEXT NOT NULL DEFAULT 'Member',
+                    created_at INTEGER NOT NULL DEFAULT 0
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS lead_assignments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    callerId TEXT NOT NULL,
+                    teamMemberId INTEGER NOT NULL,
+                    assignedDate INTEGER NOT NULL DEFAULT 0,
+                    note TEXT NOT NULL DEFAULT ''
+                )
+                """.trimIndent()
+            )
+        }
+    }
 
     @Singleton
     @Provides
@@ -61,6 +86,7 @@ object AppModule {
         .addMigrations(MIGRATION_10_11)
         .addMigrations(MIGRATION_11_12)
         .addMigrations(MIGRATION_12_13)
+        .addMigrations(MIGRATION_13_14)
         .build()
 
 

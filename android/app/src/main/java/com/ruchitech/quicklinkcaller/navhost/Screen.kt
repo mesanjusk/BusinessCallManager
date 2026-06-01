@@ -16,6 +16,7 @@ sealed class Screen(val route: String) {
     data object PrepareRoute : Screen(route = Constant.RoutePaths.PrepareRoute)
     data object SettingsRoute : Screen(route = Constant.RoutePaths.SettingsRoute)
     data object AnalyticsRoute : Screen(route = Constant.RoutePaths.AnalyticsRoute)
+    data object TeamScreen : Screen(route = Constant.RoutePaths.TeamRoute)
     data object OtpRequestRoute : Screen(route = Constant.RoutePaths.OtpRequestRouteName)
     data object OtpVerifyRoute : Screen(route = Constant.RoutePaths.VerifyOtpUiName)
 }

@@ -10,6 +10,7 @@ object Constant {
         const val ChildCallLogRoute =  "childcalllog_screen"
         const val NoteAndReminderRoute =  "note_and_reminder_screen"
         const val AnalyticsRoute = "call_analytics_screen"
+        const val TeamRoute = "team_screen"
         const val OtpRequestRouteName =  "otp_request_name"
         const val VerifyOtpUiName =  "otp_verify"
     }

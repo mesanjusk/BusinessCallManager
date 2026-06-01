@@ -12,9 +12,10 @@ class DbRepository @Inject constructor(
 ) {
     val dataDao = databaseDao.dataDao()
     val callLogDao = databaseDao.callLogs()
-    val     contact = databaseDao.contact()
+    val contact = databaseDao.contact()
     val callerIDOptions = databaseDao.callerIDOptions()
     val timestampDao = databaseDao.timestampDao()
     val reminder = databaseDao.reminders()
     val tempData = databaseDao.tempData()
+    val teamMember = databaseDao.teamMember()
 }

@@ -5,38 +5,49 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.telecom.TelecomManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,7 +58,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -56,26 +69,30 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.ruchitech.quicklinkcaller.R
 import com.ruchitech.quicklinkcaller.WebViewActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import com.ruchitech.quicklinkcaller.helper.Constant
 import com.ruchitech.quicklinkcaller.helper.Event
 import com.ruchitech.quicklinkcaller.helper.EventEmitter
 import com.ruchitech.quicklinkcaller.helper.formatDateFromMillis
+import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
 import com.ruchitech.quicklinkcaller.room.data.Contact
+import com.ruchitech.quicklinkcaller.room.data.TeamMember
+import com.ruchitech.quicklinkcaller.ui.screens.activity.ActivityViewModel
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.CircularLoadingIndicator
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.TriStateToggle
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.screens.notesandreminders.viewmodel.NoteAndReminderVm
+import com.ruchitech.quicklinkcaller.ui.screens.team.TeamViewModel
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_medium
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_semibold
 import com.ruchitech.quicklinkcaller.ui.theme.normalGoogleSansStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -148,16 +165,21 @@ fun DefaultDialerMenuItem(
 @Composable
 fun HomeScreen(viewModel: HomeVm) {
     val noteAndReminderVm: NoteAndReminderVm = hiltViewModel()
+    val activityVm: ActivityViewModel = hiltViewModel()
+    val teamVm: TeamViewModel = hiltViewModel()
     val circularLoadingIndicator by viewModel.circularLoadingIndicator.collectAsState()
     val pagerState = com.google.accompanist.pager.rememberPagerState()
-    var showSaveInappDialog by remember {
-        mutableStateOf(false)
-    }
+    var showSaveInappDialog by remember { mutableStateOf(false) }
+    var showQuickAssignDialog by remember { mutableStateOf(false) }
+    var lastSavedContact by remember { mutableStateOf<Contact?>(null) }
     val scope = rememberCoroutineScope()
+    val activityCallLogs by activityVm.allCallLogs.collectAsState()
+    val teamMemberStats by teamVm.teamMembers.collectAsState()
     val tabs = listOf(
         TabItem.NotesTab(noteAndReminderVm),
         TabItem.CallLogTab(viewModel),
         TabItem.ShowContactsTab(viewModel),
+        TabItem.ActivityTab(activityVm),
     )
     var expanded by remember {
         mutableStateOf(false)
@@ -204,23 +226,33 @@ fun HomeScreen(viewModel: HomeVm) {
             SaveContactUi("", onClose = {
                 showSaveInappDialog = false
             }, onSave = { name, number ->
-                showSaveInappDialog = false
-                EventEmitter.postEvent(
-                    Event.HomeVm(
-                        1,
-                        Contact(
-                            contact_title = name,
-                            contact_mobile = number,
-                            email = "",
-                            address = "",
-                            created_at = formatDateFromMillis(Date().time)
-                        )
-                    )
+                val newContact = Contact(
+                    contact_title = name,
+                    contact_mobile = number,
+                    email = "",
+                    address = "",
+                    created_at = formatDateFromMillis(Date().time)
                 )
+                showSaveInappDialog = false
+                lastSavedContact = newContact
+                EventEmitter.postEvent(Event.HomeVm(1, newContact))
+                showQuickAssignDialog = true
             }, onFocusChangesForName = {
             }, contactHelper = viewModel.contactHelper)
-
         }
+    }
+
+    if (showQuickAssignDialog) {
+        QuickAssignDialog(
+            savedContact = lastSavedContact,
+            recentCallLogs = activityCallLogs.take(20),
+            teamMembers = teamMemberStats.map { it.member },
+            onDismiss = { showQuickAssignDialog = false },
+            onAssign = { callerId, teamMemberId ->
+                teamVm.assignLead(callerId, teamMemberId)
+                showQuickAssignDialog = false
+            }
+        )
     }
 
 
@@ -361,6 +393,20 @@ fun HomeScreen(viewModel: HomeVm) {
                             Text("Call Analytics", fontFamily = montserrat_semibold)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            viewModel.navigateToTeam()
+                        }, text = {
+                            Text("Team Members", fontFamily = montserrat_semibold)
+                        })
+                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            EventEmitter.postEvent(Event.HomeVm(2, null))
+                        }, text = {
+                            Text("Settings", fontFamily = montserrat_semibold)
+                        })
+                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DefaultDialerMenuItem(
                             onClick = {
                                 expanded = false
@@ -482,4 +528,155 @@ fun HomeScreen(viewModel: HomeVm) {
 
     }
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun QuickAssignDialog(
+    savedContact: Contact?,
+    recentCallLogs: List<CallLogDetails>,
+    teamMembers: List<TeamMember>,
+    onDismiss: () -> Unit,
+    onAssign: (callerId: String, teamMemberId: Long) -> Unit,
+) {
+    var selectedCallerId by remember { mutableStateOf<String?>(savedContact?.contact_mobile) }
+    var selectedTeamMemberId by remember { mutableStateOf<Long?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    "Assign Lead",
+                    fontSize = 18.sp,
+                    fontFamily = montserrat_semibold,
+                    color = Color(0xFF111111)
+                )
+                Text(
+                    "Link to a call log and assign to a team member",
+                    fontSize = 12.sp,
+                    color = Color(0xFF888888),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                )
+
+                if (recentCallLogs.isNotEmpty()) {
+                    Text(
+                        "Select Call Log",
+                        fontSize = 13.sp,
+                        fontFamily = montserrat_semibold,
+                        color = Color(0xFF444444)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyColumn(modifier = Modifier.heightIn(max = 160.dp)) {
+                        items(recentCallLogs) { log ->
+                            val displayName = log.cachedName
+                                ?.takeIf { it.isNotBlank() && it != "Unknown" }
+                                ?: log.number
+                            val dateStr = remember(log.date) {
+                                SimpleDateFormat("dd MMM hh:mm a", Locale.getDefault())
+                                    .format(Date(log.date))
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectedCallerId = log.callerId }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedCallerId == log.callerId,
+                                    onClick = { selectedCallerId = log.callerId }
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = displayName,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(text = dateStr, fontSize = 11.sp, color = Color(0xFF888888))
+                                }
+                            }
+                        }
+                    }
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+
+                if (teamMembers.isNotEmpty()) {
+                    Text(
+                        "Assign to Team Member",
+                        fontSize = 13.sp,
+                        fontFamily = montserrat_semibold,
+                        color = Color(0xFF444444)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyColumn(modifier = Modifier.heightIn(max = 140.dp)) {
+                        items(teamMembers) { member ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectedTeamMemberId = member.id }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedTeamMemberId == member.id,
+                                    onClick = { selectedTeamMemberId = member.id }
+                                )
+                                Column {
+                                    Text(
+                                        text = member.name,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = member.role.ifBlank { "Member" },
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF888888)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Text(
+                        "No team members yet. Add team members from the menu.",
+                        fontSize = 12.sp,
+                        color = Color(0xFFAAAAAA),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Skip", color = Color(0xFF888888))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val cid = selectedCallerId
+                            val mid = selectedTeamMemberId
+                            if (cid != null && mid != null) {
+                                onAssign(cid, mid)
+                            } else {
+                                onDismiss()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PurpleSolid),
+                        enabled = selectedCallerId != null && selectedTeamMemberId != null
+                    ) {
+                        Text("Assign", fontFamily = montserrat_semibold)
+                    }
+                }
+            }
+        }
+    }
 }
