@@ -20,10 +20,30 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Decode keystore
+      - name: Install Android SDK platform 36
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/businesscallmanager.keystore
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            --sdk_root=$ANDROID_SDK_ROOT 2>/dev/null || true
+
+      - name: Setup keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Using keystore from repository secret"
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/businesscallmanager.keystore
+          else
+            echo "No KEYSTORE_BASE64 secret — generating a temporary keystore using build.gradle defaults"
+            keytool -genkey -v \
+              -keystore android/app/businesscallmanager.keystore \
+              -alias businesscallmanager \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "BCM@Secure2026" \
+              -keypass  "BCM@Secure2026" \
+              -dname "CN=BusinessCallManager, OU=Dev, O=Ruchitech, L=IN, S=IN, C=IN"
+          fi
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -32,26 +52,46 @@ jobs:
         working-directory: android
         run: ./gradlew assembleProdRelease bundleProdRelease --stacktrace
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'BCM@Secure2026' }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS         || 'businesscallmanager' }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD      || 'BCM@Secure2026' }}
 
-      - name: Rename output files
+      - name: Locate output files
+        id: outputs
         run: |
-          cp android/app/build/outputs/apk/Prod/release/*.apk BusinessCallManager.apk
-          cp android/app/build/outputs/bundle/ProdRelease/*.aab BusinessCallManager.aab
+          APK=$(find android/app/build/outputs/apk/Prod/release -name "*.apk" | head -1)
+          AAB=$(find android/app/build/outputs/bundle/ProdRelease  -name "*.aab" | head -1)
+          if [ -z "$APK" ] || [ -z "$AAB" ]; then
+            echo "ERROR: APK or AAB not found after build"
+            find android/app/build/outputs -type f | head -20
+            exit 1
+          fi
+          cp "$APK" BusinessCallManager.apk
+          cp "$AAB" BusinessCallManager.aab
+          echo "apk=$APK" >> $GITHUB_OUTPUT
+          echo "aab=$AAB" >> $GITHUB_OUTPUT
 
-      - name: Delete existing release if exists
-        run: |
-          gh release delete latest --yes || true
+      - name: Delete existing 'latest' release
+        run: gh release delete latest --yes || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Release with APK and AAB
+      - name: Create GitHub Release
         run: |
-          gh release create latest BusinessCallManager.apk BusinessCallManager.aab \
-            --title "Business Call Manager - Latest Build" \
-            --notes "APK: direct install on Android | AAB: upload to Google Play Store" \
+          VERSION=$(grep 'versionName' android/app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"' | head -1)
+          BUILD=$(grep 'versionCode' android/app/build.gradle.kts | grep -oP '[0-9]+' | head -1)
+          gh release create latest \
+            BusinessCallManager.apk \
+            BusinessCallManager.aab \
+            --title "Business Call Manager v${VERSION} (build ${BUILD})" \
+            --notes "**Auto-built** from commit \`${{ github.sha }}\` on branch \`${{ github.ref_name }}\`.
+
+          | File | Purpose |
+          |------|---------|
+          | \`BusinessCallManager.apk\` | Direct install on Android (sideload) |
+          | \`BusinessCallManager.aab\` | Upload to Google Play Store |
+
+          **Version:** ${VERSION} — Build ${BUILD}" \
             --latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
