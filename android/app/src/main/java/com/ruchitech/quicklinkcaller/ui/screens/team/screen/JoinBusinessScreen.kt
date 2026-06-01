@@ -105,7 +105,7 @@ fun JoinBusinessScreen(viewModel: TeamManagementVm) {
             }
 
             Button(
-                onClick = { /* TODO: Implement join business logic with backend */ },
+                onClick = { viewModel.joinBusiness(inviteCode) },
                 colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier.fillMaxWidth().height(52.dp),

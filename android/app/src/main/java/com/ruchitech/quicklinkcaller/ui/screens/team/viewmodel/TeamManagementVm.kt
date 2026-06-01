@@ -29,6 +29,12 @@ class TeamManagementVm @Inject constructor(
         }
     }
 
+    private val _joinError = MutableStateFlow<String?>(null)
+    val joinError: StateFlow<String?> = _joinError.asStateFlow()
+
+    private val _joinSuccess = MutableStateFlow(false)
+    val joinSuccess: StateFlow<Boolean> = _joinSuccess.asStateFlow()
+
     fun createBusiness(name: String) {
         viewModelScope.launch {
             val userUuid = appPreference.userId ?: return@launch
@@ -39,6 +45,43 @@ class TeamManagementVm @Inject constructor(
                 business_name = name,
                 invite_code = inviteCode
             ))
+        }
+    }
+
+    fun joinBusiness(inviteCode: String) {
+        viewModelScope.launch {
+            val userUuid = appPreference.userId ?: return@launch
+            // Add this user to the business with matching invite code
+            // For now: store as a pending member locally, sync via backend when connected
+            val existing = dbRepository.businessDao.getBusinessOnce()
+            if (existing != null && existing.invite_code == inviteCode) {
+                _joinError.value = "You are already in this business"
+                return@launch
+            }
+            if (existing != null) {
+                _joinError.value = "You are already part of another business"
+                return@launch
+            }
+            // Create a placeholder business entry (will be overwritten on backend sync)
+            dbRepository.businessDao.insertBusiness(Business(
+                business_uuid = java.util.UUID.randomUUID().toString(),
+                owner_uuid = userUuid,
+                business_name = "Team Account",
+                invite_code = inviteCode,
+                team_members_json = "[{\"user_uuid\":\"$userUuid\",\"role\":\"member\"}]"
+            ))
+            _joinSuccess.value = true
+            navigateUp()
+        }
+    }
+
+    fun addMember(memberName: String, memberPhone: String) {
+        viewModelScope.launch {
+            val business = _business.value ?: return@launch
+            val currentMembers = business.team_members_json
+            val newMember = "{\"name\":\"$memberName\",\"phone\":\"$memberPhone\",\"role\":\"member\"}"
+            val updatedJson = currentMembers.trimEnd(']') + (if (currentMembers == "[]") "" else ",") + "$newMember]"
+            dbRepository.businessDao.updateBusiness(business.copy(team_members_json = updatedJson))
         }
     }
 }

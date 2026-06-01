@@ -1,8 +1,11 @@
 package com.ruchitech.quicklinkcaller.ui.screens.tasks.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.room.data.Task
 import com.ruchitech.quicklinkcaller.ui.components.*
 import com.ruchitech.quicklinkcaller.ui.screens.tasks.viewmodel.TasksVm
@@ -27,6 +31,7 @@ import com.ruchitech.quicklinkcaller.ui.theme.*
 fun TasksScreen(viewModel: TasksVm) {
     val tasks by viewModel.tasks.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+    val leads by viewModel.leads.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -68,7 +73,11 @@ fun TasksScreen(viewModel: TasksVm) {
         }
     }
 
-    if (showAddDialog) AddTaskDialog(onDismiss = { showAddDialog = false }, onAdd = { t, d, p -> viewModel.createTask(t, d, p, null); showAddDialog = false })
+    if (showAddDialog) AddTaskDialog(
+        leads = leads,
+        onDismiss = { showAddDialog = false },
+        onAdd = { t, d, p, leadUuid -> viewModel.createTask(t, d, p, null, leadUuid); showAddDialog = false }
+    )
 }
 
 @Composable
@@ -109,10 +118,43 @@ private fun TaskCard(task: Task, onStatusChange: (String) -> Unit) {
 }
 
 @Composable
-private fun AddTaskDialog(onDismiss: () -> Unit, onAdd: (String, String?, String) -> Unit) {
+private fun AddTaskDialog(leads: List<Lead>, onDismiss: () -> Unit, onAdd: (String, String?, String, String?) -> Unit) {
     var title by remember { mutableStateOf("") }
     var desc by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("Medium") }
+    var selectedLead by remember { mutableStateOf<Lead?>(null) }
+    var showLeadPicker by remember { mutableStateOf(false) }
+
+    if (showLeadPicker) {
+        AlertDialog(
+            onDismissRequest = { showLeadPicker = false },
+            containerColor = NavySurface,
+            title = { Text("Link to Lead", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().clickable { selectedLead = null; showLeadPicker = false },
+                        color = if (selectedLead == null) ElectricBlue.copy(alpha = 0.1f) else NavySurface,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                    ) { Text("None", modifier = Modifier.padding(12.dp), color = TextPrimary) }
+                    leads.forEach { lead ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().clickable { selectedLead = lead; showLeadPicker = false },
+                            color = if (selectedLead?.lead_uuid == lead.lead_uuid) ElectricBlue.copy(alpha = 0.1f) else NavySurface,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(lead.name ?: "Unknown", color = TextPrimary, fontWeight = FontWeight.Medium)
+                                Text(lead.phone, color = TextSecondary, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showLeadPicker = false }) { Text("Close", color = ElectricBlue) } }
+        )
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = NavySurface,
@@ -127,9 +169,21 @@ private fun AddTaskDialog(onDismiss: () -> Unit, onAdd: (String, String?, String
                         FilterChip(selected = priority == p, onClick = { priority = p }, label = { Text(p, fontSize = 12.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = ElectricBlue, selectedLabelColor = Color.White))
                     }
                 }
+                Text("Linked Lead", color = TextSecondary, fontSize = 13.sp)
+                OutlinedButton(
+                    onClick = { showLeadPicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedLead != null) ElectricBlue else DividerColor)
+                ) {
+                    Text(
+                        text = selectedLead?.let { "${it.name ?: "Unknown"} · ${it.phone}" } ?: "Choose a lead (optional)",
+                        color = if (selectedLead != null) ElectricBlue else TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
             }
         },
-        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title, desc.ifBlank { null }, priority) }, colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)) { Text("Add", color = Color.White) } },
+        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title, desc.ifBlank { null }, priority, selectedLead?.lead_uuid) }, colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)) { Text("Add", color = Color.White) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) } }
     )
 }

@@ -34,22 +34,24 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         val title = extras.getString("android.title") ?: return
         val text = extras.getCharSequence("android.text")?.toString() ?: ""
 
-        // WhatsApp notification title is the contact name or phone number
-        // We look for notifications that appear to be from phone numbers (not group names)
+        // Detect WhatsApp calls: category is "call" or text contains call keywords
+        val isCallNotif = sbn.notification.category == android.app.Notification.CATEGORY_CALL ||
+            text.contains("call", ignoreCase = true)
+
+        // For messages: title is phone number format
+        // For calls: title may be contact name — capture both
         val phonePattern = Regex("^[+\\d][\\d\\s\\-()]{6,}$")
         val isLikelyPhone = phonePattern.matches(title.trim())
+
+        if (!isLikelyPhone && !isCallNotif) return
+
+        val phone = if (isLikelyPhone) title.trim().replace("[\\s\\-()]".toRegex(), "") else title.trim()
+        val source = if (isCallNotif) "whatsapp_call" else "whatsapp"
 
         CoroutineScope(Dispatchers.IO).launch {
             val db = try { MyApp.instance.dbRepository } catch (e: Exception) { return@launch }
             val prefs = try { MyApp.instance.appPreference } catch (e: Exception) { return@launch }
             val userUuid = prefs.userId ?: return@launch
-
-            val phone = title.trim().replace("[\\s\\-()]".toRegex(), "")
-
-            if (!isLikelyPhone) {
-                // Check if it matches an existing lead by name
-                return@launch
-            }
 
             val existingLead = db.leadDao.getLeadByPhone(phone)
             if (existingLead != null) return@launch
@@ -58,14 +60,13 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                 lead_uuid = UUID.randomUUID().toString(),
                 user_uuid = userUuid,
                 phone = phone,
-                source = "whatsapp",
+                source = source,
                 status = "New",
                 notes = "[]",
                 call_refs = "[]",
                 isSynced = false
             )
             db.leadDao.insertLead(lead)
-
             showLeadNotification(phone, text, lead.lead_uuid)
         }
     }

@@ -68,7 +68,7 @@ import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.
 import com.ruchitech.quicklinkcaller.persistence.recievers.ServiceControlReceiver
 import com.ruchitech.quicklinkcaller.persistence.recievers.TriggerReceiver
 import com.ruchitech.quicklinkcaller.room.DbRepository
-import com.ruchitech.quicklinkcaller.room.data.Tasks
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.ui.screens.callerid.service.CallerIdService
 import com.ruchitech.quicklinkcaller.ui.screens.callerid.service.stopAppCallerIdService
 import com.ruchitech.quicklinkcaller.ui.screens.settings.AllCallerIdOptions
@@ -432,6 +432,28 @@ class CallStateDetectionService : Service(), Handler.Callback {
                     numberFrom = 3
                 }
                 contactName = contactDetails.ifEmpty { "Unknown" }
+            }
+
+            // Auto-create lead for unknown callers
+            if (numberFrom == 0) {
+                val userUuid = MyApp.instance.appPreference.userId
+                if (userUuid != null) {
+                    val existing = MyApp.instance.dbRepository.leadDao.getLeadByPhone(callingNumber)
+                    if (existing == null) {
+                        MyApp.instance.dbRepository.leadDao.insertLead(
+                            Lead(
+                                lead_uuid = java.util.UUID.randomUUID().toString(),
+                                user_uuid = userUuid,
+                                phone = callingNumber,
+                                source = "call",
+                                status = "New",
+                                notes = "[]",
+                                call_refs = "[]",
+                                isSynced = false
+                            )
+                        )
+                    }
+                }
             }
 
             delay(150)

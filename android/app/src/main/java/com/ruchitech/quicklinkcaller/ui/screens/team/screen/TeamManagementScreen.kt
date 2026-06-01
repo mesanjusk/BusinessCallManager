@@ -1,6 +1,8 @@
 package com.ruchitech.quicklinkcaller.ui.screens.team.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -25,6 +27,7 @@ import com.ruchitech.quicklinkcaller.ui.theme.*
 fun TeamManagementScreen(viewModel: TeamManagementVm) {
     val business by viewModel.business.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var showAddMemberDialog by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
 
     Scaffold(
@@ -69,8 +72,91 @@ fun TeamManagementScreen(viewModel: TeamManagementVm) {
                         Text("Share this code with teammates to join", color = TextSecondary, fontSize = 12.sp)
                     }
                 }
+
+                // Team members section
+                val membersJson = business!!.team_members_json
+                val memberCount = membersJson.split("{").size - 1
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Team Members ($memberCount)", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 16.sp)
+                    TextButton(onClick = { showAddMemberDialog = true }) {
+                        Text("+ Add Member", color = ElectricBlue, fontSize = 13.sp)
+                    }
+                }
+                if (memberCount == 0) {
+                    Text("No members yet. Share the invite code above.", color = TextSecondary, fontSize = 13.sp, modifier = Modifier.padding(vertical = 8.dp))
+                } else {
+                    // Parse simple JSON member list
+                    val namePattern = Regex("\"name\":\"([^\"]+)\"")
+                    val phonePattern = Regex("\"phone\":\"([^\"]+)\"")
+                    val names = namePattern.findAll(membersJson).map { it.groupValues[1] }.toList()
+                    val phones = phonePattern.findAll(membersJson).map { it.groupValues[1] }.toList()
+                    names.forEachIndexed { i, name ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = NavyElevated)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AvatarInitials(name = name, size = 36)
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(name, color = TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                                    if (i < phones.size) Text(phones[i], color = TextSecondary, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                    }
+                }
             }
         }
+    }
+
+    // Add member dialog
+    if (showAddMemberDialog) {
+        var memberName by remember { mutableStateOf("") }
+        var memberPhone by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddMemberDialog = false },
+            containerColor = NavySurface,
+            title = { Text("Add Team Member", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = memberName, onValueChange = { memberName = it },
+                        label = { Text("Member Name", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = ElectricBlue, unfocusedBorderColor = DividerColor, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = memberPhone, onValueChange = { memberPhone = it },
+                        label = { Text("Phone Number", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = ElectricBlue, unfocusedBorderColor = DividerColor, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Share the invite code with them to join the app", color = TextSecondary, fontSize = 12.sp)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (memberName.isNotBlank()) {
+                            viewModel.addMember(memberName, memberPhone)
+                            showAddMemberDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
+                ) { Text("Add", color = Color.White) }
+            },
+            dismissButton = { TextButton(onClick = { showAddMemberDialog = false }) { Text("Cancel", color = TextSecondary) } }
+        )
     }
 
     if (showCreateDialog) {
