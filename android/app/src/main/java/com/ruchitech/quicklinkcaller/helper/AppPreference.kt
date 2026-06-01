@@ -136,6 +136,10 @@ constructor(
             value
         ).apply()
 
+    var geminiApiKey: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(GEMINI_API_KEY, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(GEMINI_API_KEY, value).apply()
+
     // SharedPreferences extension functions
     fun SharedPreferences.getCallerIdOptions(key: String): Set<AllCallerIdOptions> {
         val optionsString = getString(key, null)
@@ -171,6 +175,7 @@ constructor(
         private const val CALLER_ID_TYPE = "CALLER_ID_TYPE"
         private const val MOBILE_NUMBER = "mobile_number"
         private const val SET_DFAULT_DONE = "SET_DFAULT_DONE"
+        private const val GEMINI_API_KEY = "gemini_api_key"
     }
 
 }

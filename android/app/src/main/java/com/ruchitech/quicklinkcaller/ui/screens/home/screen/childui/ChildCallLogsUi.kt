@@ -31,9 +31,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -662,6 +665,46 @@ private fun CallLog(
                     color = dimBlack,
                     modifier = Modifier.padding(start = 12.dp, end = 10.dp)
                 )
+                // Smart Notes Analysis
+                if (viewModel.hasGeminiKey) {
+                    val noteAnalysisState by viewModel.noteAnalysisState.collectAsState()
+                    Row(
+                        modifier = Modifier.padding(start = 12.dp, end = 10.dp, top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(14.dp))
+                        when (val s = noteAnalysisState) {
+                            is ChildCallLogVm.NoteAnalysisState.Idle -> TextButton(
+                                onClick = { viewModel.analyzeNote(log.callNote ?: "") },
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp)
+                            ) {
+                                Text("AI Analyze", fontSize = 11.sp, color = Color(0xFF6C63FF))
+                            }
+                            is ChildCallLogVm.NoteAnalysisState.Loading -> CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = Color(0xFF6C63FF)
+                            )
+                            is ChildCallLogVm.NoteAnalysisState.Success -> {
+                                Column {
+                                    Text(s.text, fontSize = 12.sp, color = Color(0xFF333333), modifier = Modifier.padding(top = 2.dp))
+                                    TextButton(
+                                        onClick = { viewModel.resetNoteAnalysis() },
+                                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                        modifier = Modifier.height(20.dp)
+                                    ) { Text("Clear", fontSize = 10.sp, color = Color.Gray) }
+                                }
+                            }
+                            is ChildCallLogVm.NoteAnalysisState.Error -> TextButton(
+                                onClick = { viewModel.resetNoteAnalysis() },
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp)
+                            ) {
+                                Text("Error — tap to dismiss", fontSize = 11.sp, color = Color(0xFFEF5350))
+                            }
+                        }
+                    }
+                }
             }
 
 

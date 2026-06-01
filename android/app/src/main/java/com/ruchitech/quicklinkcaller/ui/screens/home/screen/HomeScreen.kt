@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.telecom.TelecomManager
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -423,6 +427,7 @@ fun HomeScreen(viewModel: HomeVm) {
                 Spacer(modifier = Modifier.width(10.dp))
             }
             Spacer(modifier = Modifier.height(10.dp))
+            DailyBriefingBanner(viewModel)
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
                 contentColor = TextPrimary,
@@ -499,4 +504,62 @@ fun HomeScreen(viewModel: HomeVm) {
 
     }
 
+}
+
+@Composable
+private fun DailyBriefingBanner(viewModel: HomeVm) {
+    if (!viewModel.hasGeminiKey) return
+
+    val briefingState by viewModel.briefingState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (briefingState is HomeVm.BriefingState.Idle) {
+            viewModel.loadDailyBriefing()
+        }
+    }
+
+    when (val state = briefingState) {
+        is HomeVm.BriefingState.Loading -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(NavyElevated)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                    color = PurpleSolid
+                )
+                Text("Loading AI briefing…", fontSize = 12.sp, color = TextSecondary)
+            }
+        }
+        is HomeVm.BriefingState.Success -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PurpleSolid.copy(alpha = 0.10f))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = PurpleSolid,
+                    modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                )
+                Text(
+                    state.text,
+                    fontSize = 12.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f),
+                    lineHeight = 18.sp
+                )
+            }
+        }
+        else -> {}
+    }
 }

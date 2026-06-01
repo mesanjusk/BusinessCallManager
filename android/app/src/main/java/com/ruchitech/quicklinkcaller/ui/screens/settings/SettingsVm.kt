@@ -140,6 +140,11 @@ class SettingsVm @Inject constructor(
         }
     }
 
+    fun saveGeminiApiKey(key: String) {
+        appPreference.geminiApiKey = key.trim().ifBlank { null }
+        showSnackbar(if (key.isBlank()) "Gemini API key removed" else "Gemini API key saved")
+    }
+
     fun backupDatabase(uri: Uri) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {

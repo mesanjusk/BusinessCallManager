@@ -67,6 +67,7 @@ import com.ruchitech.quicklinkcaller.persistence.recievers.AlarmReceiver
 import com.ruchitech.quicklinkcaller.retrofit.remote.Status
 import com.ruchitech.quicklinkcaller.retrofit.repository.AccountRepository
 import com.ruchitech.quicklinkcaller.room.DbRepository
+import com.ruchitech.quicklinkcaller.ai.GeminiService
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
 import com.ruchitech.quicklinkcaller.room.data.CallLogsWithDetails
 import com.ruchitech.quicklinkcaller.room.data.CallerIdOptionsEntity
@@ -113,8 +114,47 @@ class HomeVm @Inject constructor(
     private val accountRepository: AccountRepository,
     private val callLogHelper: CallLogHelper,
     val contactHelper: ContactHelper,
+    private val geminiService: GeminiService,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
     val tabNumber = mutableIntStateOf(0)
+
+    sealed class BriefingState {
+        object Idle : BriefingState()
+        object Loading : BriefingState()
+        data class Success(val text: String) : BriefingState()
+        data class Error(val message: String) : BriefingState()
+    }
+    private val _briefingState = MutableStateFlow<BriefingState>(BriefingState.Idle)
+    val briefingState: StateFlow<BriefingState> = _briefingState.asStateFlow()
+    val hasGeminiKey: Boolean get() = !appPreference.geminiApiKey.isNullOrBlank()
+
+    fun loadDailyBriefing() {
+        val apiKey = appPreference.geminiApiKey ?: return
+        viewModelScope.launch {
+            _briefingState.value = BriefingState.Loading
+            val today = run {
+                val cal = java.util.Calendar.getInstance()
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 0); cal.set(java.util.Calendar.MINUTE, 0)
+                cal.set(java.util.Calendar.SECOND, 0); cal.timeInMillis
+            }
+            val callsToday = try {
+                dbRepository.callLogDao.getCallLogsBetween(today, System.currentTimeMillis()).size
+            } catch (e: Exception) { 0 }
+            val totalLeads = try {
+                dbRepository.leadDao.getLeadCount(appPreference.userId ?: "")
+            } catch (e: Exception) { 0 }
+            val newLeads = try {
+                dbRepository.leadDao.getLeadsBySourceBetween("call", today, System.currentTimeMillis()).size +
+                    dbRepository.leadDao.getLeadsBySourceBetween("whatsapp", today, System.currentTimeMillis()).size
+            } catch (e: Exception) { 0 }
+            val result = geminiService.getDailyBriefing(apiKey, totalLeads, newLeads, callsToday, 0)
+            _briefingState.value = result.fold(
+                onSuccess = { BriefingState.Success(it) },
+                onFailure = { BriefingState.Error(it.message ?: "Error") }
+            )
+        }
+    }
+
     private val _callLogs = MutableStateFlow<List<CallLogsWithDetails>>(emptyList())
     val callLogsData: StateFlow<List<CallLogsWithDetails>> = _callLogs.asStateFlow()
 

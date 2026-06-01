@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.ruchitech.quicklinkcaller.ai.GeminiService
 import com.ruchitech.quicklinkcaller.contactutills.CallLogHelper
 import com.ruchitech.quicklinkcaller.data.ResourcesProvider
 import com.ruchitech.quicklinkcaller.helper.AppPreference
@@ -60,7 +61,8 @@ class ChildCallLogVm @Inject constructor(
     private val callLogHelper: CallLogHelper,
     private val dbRepository: DbRepository,
     private val savedStateHandle: SavedStateHandle,
-    private val resourcesProvider: ResourcesProvider
+    private val resourcesProvider: ResourcesProvider,
+    private val geminiService: GeminiService,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
     private val argsData =
         ChildCallLogRoute.getArgs(savedStateHandle, ChildCallLogRoute.KEY_CALLER_ID)
@@ -402,5 +404,31 @@ class ChildCallLogVm @Inject constructor(
             resourcesProvider.appContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
     }
+
+    // Smart Notes Analysis
+    sealed class NoteAnalysisState {
+        object Idle : NoteAnalysisState()
+        object Loading : NoteAnalysisState()
+        data class Success(val text: String) : NoteAnalysisState()
+        data class Error(val message: String) : NoteAnalysisState()
+    }
+    private val _noteAnalysisState = MutableStateFlow<NoteAnalysisState>(NoteAnalysisState.Idle)
+    val noteAnalysisState: StateFlow<NoteAnalysisState> = _noteAnalysisState.asStateFlow()
+    val hasGeminiKey: Boolean get() = !appPreference.geminiApiKey.isNullOrBlank()
+
+    fun analyzeNote(note: String) {
+        val apiKey = appPreference.geminiApiKey ?: return
+        if (note.isBlank()) return
+        viewModelScope.launch {
+            _noteAnalysisState.value = NoteAnalysisState.Loading
+            val result = geminiService.analyzeNotes(apiKey, note)
+            _noteAnalysisState.value = result.fold(
+                onSuccess = { NoteAnalysisState.Success(it) },
+                onFailure = { NoteAnalysisState.Error(it.message ?: "AI error") }
+            )
+        }
+    }
+
+    fun resetNoteAnalysis() { _noteAnalysisState.value = NoteAnalysisState.Idle }
 
 }

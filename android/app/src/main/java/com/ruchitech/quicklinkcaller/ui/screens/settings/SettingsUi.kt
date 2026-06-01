@@ -18,12 +18,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -40,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -256,6 +263,8 @@ fun SettingsUi(viewModel: SettingsVm) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+            GeminiAiSection(viewModel)
+            Spacer(modifier = Modifier.height(16.dp))
             WhatsAppLeadCaptureSection()
             Spacer(modifier = Modifier.height(10.dp))
             Text(
@@ -290,6 +299,74 @@ fun SettingsUi(viewModel: SettingsVm) {
                 fontSize = 16.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun GeminiAiSection(viewModel: SettingsVm) {
+    var apiKey by remember { mutableStateOf(viewModel.appPreference.geminiApiKey ?: "") }
+    var showKey by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = "AI Features (Gemini)",
+            fontFamily = sfMediumFont,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Enter your Google Gemini API key to unlock Lead Intelligence Score, WhatsApp Message Composer, Smart Notes Analysis, and Daily Briefing.",
+            fontSize = 13.sp,
+            color = Color(0xFF6B7280)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = apiKey,
+            onValueChange = { apiKey = it },
+            label = { Text("Gemini API Key", fontSize = 12.sp) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { showKey = !showKey }) {
+                    Icon(
+                        if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null,
+                        tint = Color(0xFF6B7280)
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ThemePurple,
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Get a free key at aistudio.google.com — 1,500 requests/day at no cost.",
+            fontSize = 11.sp,
+            color = Color(0xFF6B7280)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { viewModel.saveGeminiApiKey(apiKey) },
+            colors = ButtonDefaults.buttonColors(containerColor = ThemePurple)
+        ) {
+            Text("Save API Key", color = Color.White, fontSize = 13.sp)
+        }
+        if (!viewModel.appPreference.geminiApiKey.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "✓ API key configured — AI features enabled",
+                fontSize = 12.sp,
+                color = Color(0xFF2E7D32)
             )
         }
     }
