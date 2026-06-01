@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -43,8 +44,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationManagerCompat
 import com.ruchitech.quicklinkcaller.navhost.routes.PrepairDataRoute
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.DeleteAccountConfirmationDialog
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
@@ -252,6 +255,8 @@ fun SettingsUi(viewModel: SettingsVm) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+            WhatsAppLeadCaptureSection()
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 fontFamily = sfMediumFont,
@@ -285,6 +290,61 @@ fun SettingsUi(viewModel: SettingsVm) {
                 fontSize = 16.sp,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun WhatsAppLeadCaptureSection() {
+    val context = LocalContext.current
+    val isEnabled = NotificationManagerCompat.getEnabledListenerPackages(context)
+        .contains(context.packageName)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = "WhatsApp Lead Capture",
+            fontFamily = sfMediumFont,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = if (isEnabled)
+                "✓ Enabled — unknown WhatsApp contacts are auto-added as leads"
+            else
+                "Auto-capture leads from WhatsApp messages of unknown numbers",
+            fontSize = 13.sp,
+            color = if (isEnabled) Color(0xFF2E7D32) else Color(0xFF6B7280)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = {
+                context.startActivity(
+                    android.content.Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isEnabled) Color(0xFF2E7D32) else ThemePurple
+            )
+        ) {
+            Text(
+                text = if (isEnabled) "Manage Notification Access" else "Enable WhatsApp Lead Capture",
+                color = Color.White,
+                fontSize = 13.sp
+            )
+        }
+        if (!isEnabled) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Tap the button → find Business Call Manager → toggle ON",
+                fontSize = 11.sp,
+                color = Color(0xFF6B7280)
             )
         }
     }

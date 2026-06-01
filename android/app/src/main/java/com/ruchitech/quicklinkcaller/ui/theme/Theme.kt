@@ -1,7 +1,5 @@
 package com.ruchitech.quicklinkcaller.ui.theme
 import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -10,10 +8,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val PremiumDarkColorScheme = darkColorScheme(
+private val PremiumLightColorScheme = lightColorScheme(
     primary = ElectricBlue,
     onPrimary = Color.White,
-    primaryContainer = NavyElevated,
+    primaryContainer = Color(0xFFE3F2FD),
     onPrimaryContainer = TextPrimary,
     secondary = ElectricBlueLight,
     onSecondary = Color.White,
@@ -30,17 +28,17 @@ private val PremiumDarkColorScheme = darkColorScheme(
 
 @Composable
 fun QuicklinkCallerTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = PremiumDarkColorScheme
+    val colorScheme = PremiumLightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = NavyPrimary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
     }
     MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)

@@ -164,7 +164,7 @@ class MainActivity : ComponentActivity() {
                 SideEffect {
                     systemUiController.setStatusBarColor(
                         color = NavyPrimary,
-                        darkIcons = false
+                        darkIcons = true
                     )
                 }
 
