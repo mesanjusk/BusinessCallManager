@@ -3,12 +3,13 @@ package com.ruchitech.quicklinkcaller.helper
 import android.content.Context
 import android.content.SharedPreferences
 import com.ruchitech.quicklinkcaller.ui.screens.settings.AllCallerIdOptions
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 class AppPreference
 @Inject
 constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
 
 
