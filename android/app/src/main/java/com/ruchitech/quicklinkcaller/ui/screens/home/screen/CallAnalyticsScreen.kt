@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,7 +90,9 @@ fun CallAnalyticsScreen(viewModel: CallAnalyticsVm) {
 @Composable
 private fun HeaderChips(currentLabel: String, onRangeSelected: (CallAnalyticsVm.Range) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         listOf(
@@ -103,7 +106,7 @@ private fun HeaderChips(currentLabel: String, onRangeSelected: (CallAnalyticsVm.
                 onClick = { onRangeSelected(range) },
                 label = { Text(range.label, fontSize = 12.sp) },
                 colors = AssistChipDefaults.assistChipColors(
-                    containerColor = if (selected) ThemePurple.copy(alpha = 0.15f) else Color(0xFFF6F7FB),
+                    containerColor = if (selected) ThemePurple.copy(alpha = 0.15f) else NavyElevated,
                     labelColor = if (selected) ThemePurple else TextPrimary
                 )
             )

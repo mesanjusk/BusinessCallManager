@@ -208,10 +208,11 @@ private fun WhatsAppLeadsList(
 
     LazyColumn(modifier = Modifier.fillMaxSize().background(NavyPrimary)) {
         items(leads) { lead ->
+            val realPhone = if (lead.phone.startsWith("wa_")) null else lead.phone
             WhatsAppLeadItem(
                 lead = lead,
                 isCall = isCall,
-                onWhatsApp = { context.openWhatsapp(lead.phone) }
+                onWhatsApp = realPhone?.let { { context.openWhatsapp(it) } }
             )
             Divider(thickness = 0.5.dp, color = DividerColor)
         }
@@ -298,7 +299,7 @@ private fun CallLogItem(
 private fun WhatsAppLeadItem(
     lead: Lead,
     isCall: Boolean,
-    onWhatsApp: () -> Unit,
+    onWhatsApp: (() -> Unit)?,
 ) {
     val displayName = lead.name?.takeIf { it.isNotBlank() } ?: lead.phone
     val dateStr = remember(lead.created_at) {
@@ -342,8 +343,10 @@ private fun WhatsAppLeadItem(
                 Text("Status: ${lead.status}", fontSize = 11.sp, color = TextSecondary)
             }
         }
-        IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
-            Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "Open WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(22.dp))
+        if (onWhatsApp != null) {
+            IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
+                Icon(painterResource(id = R.drawable.ic_whatsapp), contentDescription = "Open WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(22.dp))
+            }
         }
     }
 }

@@ -128,8 +128,9 @@ import com.ruchitech.quicklinkcaller.ui.theme.DarkGray
 import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
+import com.ruchitech.quicklinkcaller.ui.theme.TextPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.TextSecondary
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
-import com.ruchitech.quicklinkcaller.ui.theme.dimBlack
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_medium
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_regular
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat
@@ -552,7 +553,7 @@ fun LoaderItem() {
                     text = "Loading older…",
                     style = normalGoogleSansStyle,
                     fontSize = 13.sp.nonScaledSp,
-                    color = dimBlack.copy(alpha = 0.7f)
+                    color = TextSecondary
                 )
             }
         }
@@ -663,7 +664,7 @@ fun CallLogItem(
                     modifier = Modifier.weight(1F), verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     val isKnownName = displayName != "Unknown"
-                    val nameColor = if (isKnownName) callLog.colorCode else dimBlack
+                    val nameColor = if (isKnownName) callLog.colorCode else TextPrimary
                     val displayTitle = if (isKnownName) {
                         displayName
                     } else {
@@ -696,7 +697,7 @@ fun CallLogItem(
                                         //.rotate( if (callLog.type == CallType.OUTGOING) -180F else if (callLog.type== CallType.INCOMING) 0F else 0F)
                                         .padding(top = 0.dp)
                                         .scale(1F),
-                                    tint = dimBlack,
+                                    tint = TextSecondary,
                                 )
 
                             }
@@ -711,7 +712,7 @@ fun CallLogItem(
                                         //.rotate( if (callLog.type == CallType.OUTGOING) -180F else if (callLog.type== CallType.INCOMING) 0F else 0F)
                                         .padding()
                                         .scale(1F),
-                                    tint = dimBlack,
+                                    tint = TextSecondary,
                                 )
                             }
 
@@ -747,12 +748,12 @@ fun CallLogItem(
                             text = " • ", // middle dot character
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            color = dimBlack.copy(alpha = 0.4F)
+                            color = TextSecondary
                         )
                         Text(
                             text = formattedTime,
                             overflow = TextOverflow.Ellipsis,
-                            style = normalGoogleSansStyle.copy(color = dimBlack.copy(alpha = 0.8F)),
+                            style = normalGoogleSansStyle.copy(color = TextSecondary),
                             fontSize = 14.sp.nonScaledSp,
                             maxLines = 1,
                             modifier = Modifier.defaultMinSize(minWidth = 100.dp)
@@ -796,7 +797,7 @@ fun CallLogItem(
                         Icon(
                             painter = painterResource(id = R.drawable.call_outline),
                             contentDescription = null,
-                            tint = dimBlack,
+                            tint = TextSecondary,
                             modifier = Modifier
                                 .size(35.dp)
                                 .padding(top = 10.dp)
@@ -836,7 +837,7 @@ fun CallLogItem(
                             fontFamily = google_sans_regular,
                             fontSize = 14.sp.nonScaledSp,
                             overflow = TextOverflow.Ellipsis,
-                            color = dimBlack,
+                            color = TextSecondary,
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()/* .background(
@@ -884,7 +885,7 @@ fun CallLogItem(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .padding(5.dp),
-                                tint = dimBlack
+                                tint = TextSecondary
                             )
                             Spacer(modifier = Modifier.width(5.dp))
 
@@ -902,7 +903,7 @@ fun CallLogItem(
                                     fontFamily = google_sans_regular,
                                     fontSize = 14.sp.nonScaledSp,
                                     overflow = TextOverflow.Ellipsis,
-                                    color = dimBlack,
+                                    color = TextSecondary,
                                     maxLines = 1,
                                     modifier = Modifier.padding(
                                         start = 0.dp, end = 5.dp, top = 7.5.dp, bottom = 7.5.dp
@@ -915,7 +916,7 @@ fun CallLogItem(
                                     text = moreTasks,
                                     fontSize = 14.sp.nonScaledSp,
                                     fontFamily = google_sans_regular,
-                                    color = dimBlack,
+                                    color = TextSecondary,
                                     modifier = Modifier.clickable {
                                         isTaskPopupOpen2 = true
                                     })
@@ -969,7 +970,7 @@ fun CallLogItem(
                             Icon(
                                 painter = painterResource(id = R.drawable.contact_book_filled),
                                 contentDescription = null,
-                                tint = dimBlack,
+                                tint = TextSecondary,
                                 modifier = Modifier
                                     .size(30.dp)
                                     .padding(3.50.dp)
@@ -1058,7 +1059,7 @@ fun CallLogItem(
                             modifier = Modifier
                                 .size(30.dp)
                                 .padding(2.dp),
-                            tint = dimBlack
+                            tint = TextSecondary
                         )
                     }
 
@@ -1098,7 +1099,7 @@ fun CallLogItem(
                                     modifier = Modifier
                                         .size(30.dp)
                                         .padding(3.90.dp),
-                                    tint = dimBlack
+                                    tint = TextSecondary
                                 )
                             }
                         }
@@ -1119,7 +1120,7 @@ fun CallLogItem(
                                 .clickable {
                                     isShareContactOpen = true
                                 },
-                            tint = dimBlack,
+                            tint = TextSecondary,
                         )
 
                         if (isShareContactOpen) {
@@ -1156,7 +1157,7 @@ fun CallLogItem(
                             modifier = Modifier
                                 .size(30.dp)
                                 .padding(3.dp),
-                            tint = dimBlack
+                            tint = TextSecondary
                         )
                     }
 
@@ -1172,7 +1173,7 @@ fun CallLogItem(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .padding(4.dp),
-                                tint = dimBlack
+                                tint = TextSecondary
                             )
                         }
 

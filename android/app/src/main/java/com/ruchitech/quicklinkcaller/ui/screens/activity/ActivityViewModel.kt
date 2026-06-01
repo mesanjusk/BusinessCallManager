@@ -19,6 +19,7 @@ import java.util.Calendar
 import javax.inject.Inject
 
 enum class ActivityDateFilter(val label: String) {
+    ALL("All"),
     TODAY("Today"),
     WEEK("Week"),
     MONTH("Month"),
@@ -41,7 +42,7 @@ class ActivityViewModel @Inject constructor(
     private val _whatsappCalls = MutableStateFlow<List<Lead>>(emptyList())
     val whatsappCalls: StateFlow<List<Lead>> = _whatsappCalls.asStateFlow()
 
-    var selectedFilter by mutableStateOf(ActivityDateFilter.TODAY)
+    var selectedFilter by mutableStateOf(ActivityDateFilter.ALL)
         private set
     var customDateStart by mutableStateOf<Long?>(null)
         private set
@@ -69,14 +70,29 @@ class ActivityViewModel @Inject constructor(
     fun loadLogs() {
         viewModelScope.launch {
             val (start, end) = getDateRange()
-            val logs = dbRepository.callLogDao.getCallLogsBetween(start, end)
+
+            // Call logs — filtered by date column
+            val logs = if (selectedFilter == ActivityDateFilter.ALL) {
+                dbRepository.callLogDao.getAllCallLogsForAnalytics()
+            } else {
+                dbRepository.callLogDao.getCallLogsBetween(start, end)
+            }
             _allCallLogs.value = logs.sortedByDescending { it.date }
 
-            _whatsappMessages.value = dbRepository.leadDao
-                .getLeadsBySourceBetween("whatsapp", start, end)
+            // WhatsApp messages and calls from leads table
+            val waMessages = if (selectedFilter == ActivityDateFilter.ALL) {
+                dbRepository.leadDao.getLeadsBySource("whatsapp")
+            } else {
+                dbRepository.leadDao.getLeadsBySourceBetween("whatsapp", start, end)
+            }
+            _whatsappMessages.value = waMessages.sortedByDescending { it.updated_at }
 
-            _whatsappCalls.value = dbRepository.leadDao
-                .getLeadsBySourceBetween("whatsapp_call", start, end)
+            val waCalls = if (selectedFilter == ActivityDateFilter.ALL) {
+                dbRepository.leadDao.getLeadsBySource("whatsapp_call")
+            } else {
+                dbRepository.leadDao.getLeadsBySourceBetween("whatsapp_call", start, end)
+            }
+            _whatsappCalls.value = waCalls.sortedByDescending { it.updated_at }
         }
     }
 
@@ -84,6 +100,7 @@ class ActivityViewModel @Inject constructor(
         val cal = Calendar.getInstance()
         val end = cal.timeInMillis
         return when (selectedFilter) {
+            ActivityDateFilter.ALL -> Pair(0L, end)
             ActivityDateFilter.TODAY -> {
                 cal.set(Calendar.HOUR_OF_DAY, 0)
                 cal.set(Calendar.MINUTE, 0)
