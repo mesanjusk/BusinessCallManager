@@ -125,6 +125,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.theme.DarkGray
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
@@ -270,7 +271,7 @@ fun CallLogScreen(viewModel: HomeVm) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(NavyPrimary)
         ) {
             Divider()
             Spacer(modifier = Modifier.height(10.dp))

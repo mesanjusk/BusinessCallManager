@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ruchitech.quicklinkcaller.helper.formatTimeAgo
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.CallAnalyticsVm
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.dimBlack
@@ -47,7 +48,7 @@ fun CallAnalyticsScreen(viewModel: CallAnalyticsVm) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(NavyPrimary)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .verticalScroll(rememberScrollState())
     ) {

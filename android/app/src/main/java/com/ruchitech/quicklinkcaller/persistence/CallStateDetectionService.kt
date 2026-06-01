@@ -530,6 +530,18 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 android.R.drawable.ic_input_add, "cancel", addNotePendingIntent
             ).build()
 
+            val addLeadIntent = Intent(context, PostCallActivity::class.java).apply {
+                action = NotificationReceiver.ACTION_ADD_LEAD
+                putExtra("type", callType)
+                putExtra("number", callingNumber)
+                putExtra("name", contactName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            val addLeadPendingIntent = PendingIntent.getActivity(
+                context, notificationId + 100, addLeadIntent,
+                FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
             val copyNumberIntent = Intent(context, PostCallActivity::class.java).apply {
                 action = NotificationReceiver.ACTION_COPY_NUMBER
                 putExtra("type", callType)
@@ -578,6 +590,11 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setCustomContentView(notificationLayout)
                 .setCustomBigContentView(notificationLayout)
+                .apply {
+                    if (numberFrom == 0) {
+                        addAction(android.R.drawable.ic_menu_add, "Add Lead", addLeadPendingIntent)
+                    }
+                }
             // Show the notification
             with(NotificationManagerCompat.from(context)) {
                 notify(notificationId, builder.build())

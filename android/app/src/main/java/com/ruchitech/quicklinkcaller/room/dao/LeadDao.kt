@@ -21,6 +21,9 @@ interface LeadDao {
     @Query("SELECT * FROM leads WHERE lead_uuid = :leadUuid LIMIT 1")
     suspend fun getLeadById(leadUuid: String): Lead?
 
+    @Query("SELECT * FROM leads WHERE phone = :phone LIMIT 1")
+    suspend fun getLeadByPhone(phone: String): Lead?
+
     @Query("SELECT * FROM leads WHERE isSynced = 0 AND user_uuid = :userUuid")
     suspend fun getUnsyncedLeads(userUuid: String): List<Lead>
 

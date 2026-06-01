@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.ruchitech.quicklinkcaller.helper.isWithin31Days
 import com.ruchitech.quicklinkcaller.helper.setEndTimeOfDay
 import com.ruchitech.quicklinkcaller.helper.setStartTimeOfDay
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import java.text.SimpleDateFormat
@@ -128,7 +129,7 @@ fun DateRangePickerSample(
     val context = LocalContext.current
     DateRangePicker(
         state = state,
-        modifier = Modifier.background(Color.White),
+        modifier = Modifier.background(NavySurface),
         dateFormatter = DatePickerDefaults.dateFormatter("yyyy MM dd", "yyyy MM dd", "yyyy MM dd"),
       //  dateValidator = dateValidator(),
         title = {

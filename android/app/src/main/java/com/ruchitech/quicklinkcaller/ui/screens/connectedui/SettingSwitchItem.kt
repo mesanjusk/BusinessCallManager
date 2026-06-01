@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ruchitech.quicklinkcaller.R
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 
 @Composable
@@ -70,7 +71,7 @@ fun Test() {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(Color.White)
+            .background(NavySurface)
     ) {
         SettingSwitchItem(
             title = R.string.app_name,

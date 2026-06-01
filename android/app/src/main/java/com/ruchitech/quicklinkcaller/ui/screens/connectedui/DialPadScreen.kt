@@ -49,6 +49,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
 
 fun View.vibrate() = reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -103,7 +104,7 @@ fun DialPadScreen(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .background(Color.White)
+            .background(NavyPrimary)
             .padding(bottom = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
@@ -263,7 +264,7 @@ fun DialButton(number: String, letters: String, onClick: () -> Unit) {
         modifier = Modifier
             .width(125.dp)
             .padding(vertical = 8.dp)
-            .background(Color.White)
+            .background(NavyPrimary)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {

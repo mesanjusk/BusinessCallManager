@@ -100,6 +100,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.LoaderItem
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.ChildCallLogVm
 import com.ruchitech.quicklinkcaller.ui.theme.DarkGray
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.dimBlack
@@ -305,7 +306,7 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(NavyPrimary)
     ) {
         Column {
             ContactTopBar(name = name,data) {

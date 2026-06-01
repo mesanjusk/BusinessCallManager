@@ -75,6 +75,7 @@ import com.ruchitech.quicklinkcaller.helper.XiaomiUtilities.isMIUI
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.CircularLoadingIndicator
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.SettingSwitchItem
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.TextColor
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_medium
@@ -428,7 +429,7 @@ fun PermissionHandlingUi(viewModel: PrepareDataVm) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(Color.White)
+                .background(NavyPrimary)
         ) {
             Row(
                 modifier = Modifier

@@ -46,6 +46,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.ruchitech.quicklinkcaller.helper.formatTimestampToDate
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.TextColor
 import com.ruchitech.quicklinkcaller.ui.theme.TextFieldBg
@@ -135,7 +136,7 @@ private fun TimePicker(selectedTime: (hour: String?, minute: String?, seconds: S
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(NavySurface)
                     .padding(
                         vertical = 0.dp,
                         horizontal = 10.dp
@@ -213,7 +214,7 @@ private fun TimePicker(selectedTime: (hour: String?, minute: String?, seconds: S
 
             }
 
-            Box(modifier = Modifier.background(Color.White)) {
+            Box(modifier = Modifier.background(NavySurface)) {
                 Row(
                     modifier = Modifier
                         .wrapContentHeight()
@@ -392,7 +393,7 @@ private fun TimePicker(selectedTime: (hour: String?, minute: String?, seconds: S
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(0.dp)
-                        .background(Color.White)
+                        .background(NavySurface)
                         .align(Alignment.BottomCenter)
                 )
             }
