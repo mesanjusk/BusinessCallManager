@@ -126,10 +126,10 @@ class HomeVm @Inject constructor(
     }
     private val _briefingState = MutableStateFlow<BriefingState>(BriefingState.Idle)
     val briefingState: StateFlow<BriefingState> = _briefingState.asStateFlow()
-    val hasGeminiKey: Boolean get() = !appPreference.geminiApiKey.isNullOrBlank()
+    val hasGeminiKey: Boolean get() = geminiService.hasAiAccess
 
     fun loadDailyBriefing() {
-        val apiKey = appPreference.geminiApiKey ?: return
+        if (!geminiService.hasAiAccess) return
         viewModelScope.launch {
             _briefingState.value = BriefingState.Loading
             val today = run {
@@ -147,7 +147,7 @@ class HomeVm @Inject constructor(
                 dbRepository.leadDao.getLeadsBySourceBetween("call", today, System.currentTimeMillis()).size +
                     dbRepository.leadDao.getLeadsBySourceBetween("whatsapp", today, System.currentTimeMillis()).size
             } catch (e: Exception) { 0 }
-            val result = geminiService.getDailyBriefing(apiKey, totalLeads, newLeads, callsToday, 0)
+            val result = geminiService.getDailyBriefing(totalLeads, newLeads, callsToday, 0)
             _briefingState.value = result.fold(
                 onSuccess = { BriefingState.Success(it) },
                 onFailure = { BriefingState.Error(it.message ?: "Error") }

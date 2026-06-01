@@ -195,6 +195,7 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.1.0")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.23.0")
     implementation("com.google.accompanist:accompanist-pager:0.25.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("io.michaelrocks:libphonenumber-android:8.13.48")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.13.5")
 

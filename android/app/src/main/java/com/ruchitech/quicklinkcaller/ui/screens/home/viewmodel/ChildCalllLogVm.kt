@@ -414,14 +414,13 @@ class ChildCallLogVm @Inject constructor(
     }
     private val _noteAnalysisState = MutableStateFlow<NoteAnalysisState>(NoteAnalysisState.Idle)
     val noteAnalysisState: StateFlow<NoteAnalysisState> = _noteAnalysisState.asStateFlow()
-    val hasGeminiKey: Boolean get() = !appPreference.geminiApiKey.isNullOrBlank()
+    val hasGeminiKey: Boolean get() = geminiService.hasAiAccess
 
     fun analyzeNote(note: String) {
-        val apiKey = appPreference.geminiApiKey ?: return
-        if (note.isBlank()) return
+        if (!geminiService.hasAiAccess || note.isBlank()) return
         viewModelScope.launch {
             _noteAnalysisState.value = NoteAnalysisState.Loading
-            val result = geminiService.analyzeNotes(apiKey, note)
+            val result = geminiService.analyzeNotes(note)
             _noteAnalysisState.value = result.fold(
                 onSuccess = { NoteAnalysisState.Success(it) },
                 onFailure = { NoteAnalysisState.Error(it.message ?: "AI error") }

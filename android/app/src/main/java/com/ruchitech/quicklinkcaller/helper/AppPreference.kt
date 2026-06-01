@@ -140,6 +140,10 @@ constructor(
         get() = getSharedPreference(PREFERENCE_KEY).getString(GEMINI_API_KEY, null)
         set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(GEMINI_API_KEY, value).apply()
 
+    var googleAccountEmail: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(GOOGLE_ACCOUNT_EMAIL, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(GOOGLE_ACCOUNT_EMAIL, value).apply()
+
     // SharedPreferences extension functions
     fun SharedPreferences.getCallerIdOptions(key: String): Set<AllCallerIdOptions> {
         val optionsString = getString(key, null)
@@ -176,6 +180,7 @@ constructor(
         private const val MOBILE_NUMBER = "mobile_number"
         private const val SET_DFAULT_DONE = "SET_DFAULT_DONE"
         private const val GEMINI_API_KEY = "gemini_api_key"
+        private const val GOOGLE_ACCOUNT_EMAIL = "google_account_email"
     }
 
 }

@@ -151,7 +151,7 @@ fun LeadDetailScreen(viewModel: LeadDetailVm) {
 
                 // AI Features card
                 AiInsightsCard(
-                    hasApiKey = viewModel.hasGeminiKey,
+                    hasApiKey = viewModel.hasAiAccess,
                     aiScoreState = aiScoreState,
                     aiMessageState = aiMessageState,
                     onScoreTap = { viewModel.scoreLeadWithAi() },
@@ -187,7 +187,7 @@ private fun AiInsightsCard(
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!hasApiKey) {
                 Text(
-                    "Add your Gemini API key in Settings → AI Features to enable AI insights.",
+                    "Connect your Google account in Settings → AI Features to enable AI insights.",
                     fontSize = 13.sp,
                     color = TextSecondary
                 )

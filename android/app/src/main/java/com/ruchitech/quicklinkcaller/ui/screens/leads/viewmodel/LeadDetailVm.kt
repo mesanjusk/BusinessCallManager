@@ -3,7 +3,6 @@ package com.ruchitech.quicklinkcaller.ui.screens.leads.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.ruchitech.quicklinkcaller.ai.GeminiService
-import com.ruchitech.quicklinkcaller.helper.AppPreference
 import com.ruchitech.quicklinkcaller.navhost.nav.RouteNavigator
 import com.ruchitech.quicklinkcaller.navhost.routes.LeadDetailRoute
 import com.ruchitech.quicklinkcaller.room.DbRepository
@@ -27,7 +26,6 @@ sealed class AiState {
 class LeadDetailVm @Inject constructor(
     private val routeNavigator: RouteNavigator,
     private val dbRepository: DbRepository,
-    private val appPreference: AppPreference,
     private val geminiService: GeminiService,
     savedStateHandle: SavedStateHandle,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
@@ -44,7 +42,7 @@ class LeadDetailVm @Inject constructor(
     private val _aiMessageState = MutableStateFlow<AiState>(AiState.Idle)
     val aiMessageState: StateFlow<AiState> = _aiMessageState.asStateFlow()
 
-    val hasGeminiKey: Boolean get() = !appPreference.geminiApiKey.isNullOrBlank()
+    val hasAiAccess: Boolean get() = geminiService.hasAiAccess
 
     init {
         if (leadUuid.isNotEmpty()) {
@@ -63,15 +61,13 @@ class LeadDetailVm @Inject constructor(
 
     fun scoreLeadWithAi() {
         val lead = _lead.value ?: return
-        val apiKey = appPreference.geminiApiKey ?: return
-
+        if (!geminiService.hasAiAccess) return
         viewModelScope.launch {
             val callCount = try {
                 dbRepository.callLogDao.getCallLogById(lead.phone)?.let { 1 } ?: 0
             } catch (e: Exception) { 0 }
             _aiScoreState.value = AiState.Loading
             val result = geminiService.scoreLeadIntelligence(
-                apiKey = apiKey,
                 name = lead.name,
                 phone = lead.phone,
                 status = lead.status,
@@ -88,11 +84,10 @@ class LeadDetailVm @Inject constructor(
 
     fun composeWhatsAppMessage(purpose: String) {
         val lead = _lead.value ?: return
-        val apiKey = appPreference.geminiApiKey ?: return
+        if (!geminiService.hasAiAccess) return
         viewModelScope.launch {
             _aiMessageState.value = AiState.Loading
             val result = geminiService.composeWhatsAppMessage(
-                apiKey = apiKey,
                 name = lead.name,
                 status = lead.status,
                 purpose = purpose,

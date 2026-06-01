@@ -1,5 +1,6 @@
 package com.ruchitech.quicklinkcaller.ai
 
+import com.ruchitech.quicklinkcaller.helper.AppPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,8 +14,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GeminiService @Inject constructor() {
-
+class GeminiService @Inject constructor(
+    private val appPreference: AppPreference,
+    private val googleAuthHelper: GoogleAuthHelper,
+) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -23,51 +26,98 @@ class GeminiService @Inject constructor() {
     private val endpoint =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-    suspend fun generate(apiKey: String, prompt: String): Result<String> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val body = JSONObject().apply {
-                    put("contents", JSONArray().apply {
-                        put(JSONObject().apply {
-                            put("parts", JSONArray().apply {
-                                put(JSONObject().apply { put("text", prompt) })
-                            })
-                        })
-                    })
-                }.toString()
+    /**
+     * Returns true if the user has either a connected Google account or a saved API key.
+     */
+    val hasAiAccess: Boolean
+        get() = !appPreference.googleAccountEmail.isNullOrBlank()
+                || !appPreference.geminiApiKey.isNullOrBlank()
 
-                val request = Request.Builder()
-                    .url("$endpoint?key=$apiKey")
-                    .post(body.toRequestBody("application/json".toMediaType()))
-                    .build()
-
-                val response = client.newCall(request).execute()
-                val responseBody = response.body?.string()
-                    ?: throw Exception("Empty response from Gemini")
-
-                if (!response.isSuccessful) {
-                    val msg = try {
-                        JSONObject(responseBody).optJSONObject("error")?.optString("message")
-                            ?: responseBody
-                    } catch (e: Exception) {
-                        responseBody
-                    }
-                    throw Exception(msg)
+    /**
+     * Builds the correct request URL / Authorization header based on which auth method is active.
+     * Google account takes priority over API key.
+     */
+    private suspend fun buildAuthenticatedRequest(
+        url: String,
+        body: String,
+    ): Pair<Request, GoogleAuthHelper.TokenResult.ConsentRequired?> {
+        val email = appPreference.googleAccountEmail
+        if (!email.isNullOrBlank()) {
+            return when (val result = googleAuthHelper.getToken(email)) {
+                is GoogleAuthHelper.TokenResult.Success -> {
+                    val req = Request.Builder()
+                        .url(url)
+                        .addHeader("Authorization", "Bearer ${result.token}")
+                        .post(body.toRequestBody("application/json".toMediaType()))
+                        .build()
+                    Pair(req, null)
                 }
-
-                JSONObject(responseBody)
-                    .getJSONArray("candidates")
-                    .getJSONObject(0)
-                    .getJSONObject("content")
-                    .getJSONArray("parts")
-                    .getJSONObject(0)
-                    .getString("text")
-                    .trim()
+                is GoogleAuthHelper.TokenResult.ConsentRequired -> {
+                    // Return the consent intent so the caller can surface it
+                    throw ConsentRequiredException(result)
+                }
+                is GoogleAuthHelper.TokenResult.Failure -> {
+                    throw Exception(result.error)
+                }
             }
         }
 
+        // Fallback: API key
+        val apiKey = appPreference.geminiApiKey
+            ?: throw Exception("No AI credentials configured. Connect a Google account or add an API key in Settings.")
+        val req = Request.Builder()
+            .url("$url?key=$apiKey")
+            .post(body.toRequestBody("application/json".toMediaType()))
+            .build()
+        return Pair(req, null)
+    }
+
+    class ConsentRequiredException(val result: GoogleAuthHelper.TokenResult.ConsentRequired) :
+        Exception("Google account consent required")
+
+    suspend fun generate(prompt: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val body = JSONObject().apply {
+                put("contents", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("parts", JSONArray().apply {
+                            put(JSONObject().apply { put("text", prompt) })
+                        })
+                    })
+                })
+            }.toString()
+
+            val (request, _) = buildAuthenticatedRequest(endpoint, body)
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+                ?: throw Exception("Empty response from Gemini")
+
+            if (!response.isSuccessful) {
+                val msg = try {
+                    JSONObject(responseBody).optJSONObject("error")?.optString("message")
+                        ?: responseBody
+                } catch (e: Exception) {
+                    responseBody
+                }
+                // If token is expired/revoked, clear it so next call re-fetches
+                if (response.code == 401) {
+                    appPreference.googleAccountEmail?.let { googleAuthHelper.invalidateToken(it) }
+                }
+                throw Exception(msg)
+            }
+
+            JSONObject(responseBody)
+                .getJSONArray("candidates")
+                .getJSONObject(0)
+                .getJSONObject("content")
+                .getJSONArray("parts")
+                .getJSONObject(0)
+                .getString("text")
+                .trim()
+        }
+    }
+
     suspend fun scoreLeadIntelligence(
-        apiKey: String,
         name: String?,
         phone: String,
         status: String,
@@ -75,7 +125,6 @@ class GeminiService @Inject constructor() {
         notes: String,
         callCount: Int,
     ): Result<String> = generate(
-        apiKey,
         buildString {
             appendLine("You are a sales AI. Analyze this business lead and respond in EXACTLY this format:")
             appendLine("SCORE: [0-100]")
@@ -94,12 +143,10 @@ class GeminiService @Inject constructor() {
     )
 
     suspend fun composeWhatsAppMessage(
-        apiKey: String,
         name: String?,
         status: String,
         purpose: String,
     ): Result<String> = generate(
-        apiKey,
         buildString {
             appendLine("Write a short professional WhatsApp business message.")
             appendLine("Contact name: ${name ?: "there"}")
@@ -111,8 +158,7 @@ class GeminiService @Inject constructor() {
         }
     )
 
-    suspend fun analyzeNotes(apiKey: String, notes: String): Result<String> = generate(
-        apiKey,
+    suspend fun analyzeNotes(notes: String): Result<String> = generate(
         buildString {
             appendLine("Extract 2-3 key action items from these call notes.")
             appendLine("Format as bullet points using •")
@@ -124,13 +170,11 @@ class GeminiService @Inject constructor() {
     )
 
     suspend fun getDailyBriefing(
-        apiKey: String,
         totalLeads: Int,
         newLeads: Int,
         callsMade: Int,
         pendingFollowUps: Int,
     ): Result<String> = generate(
-        apiKey,
         buildString {
             appendLine("Write a 2-sentence motivating daily sales briefing.")
             appendLine("Stats: $totalLeads total leads, $newLeads new today, $callsMade calls today, $pendingFollowUps pending follow-ups.")
