@@ -67,6 +67,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.CircularLoadingIndic
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.TriStateToggle
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
+import com.ruchitech.quicklinkcaller.ui.screens.activity.ActivityViewModel
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.screens.notesandreminders.viewmodel.NoteAndReminderVm
 import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
@@ -153,6 +154,7 @@ fun DefaultDialerMenuItem(
 @Composable
 fun HomeScreen(viewModel: HomeVm) {
     val noteAndReminderVm: NoteAndReminderVm = hiltViewModel()
+    val activityVm: ActivityViewModel = hiltViewModel()
     val circularLoadingIndicator by viewModel.circularLoadingIndicator.collectAsState()
     val pagerState = com.google.accompanist.pager.rememberPagerState()
     var showSaveInappDialog by remember {
@@ -163,6 +165,7 @@ fun HomeScreen(viewModel: HomeVm) {
         TabItem.NotesTab(noteAndReminderVm),
         TabItem.CallLogTab(viewModel),
         TabItem.ShowContactsTab(viewModel),
+        TabItem.ActivityTab(activityVm),
     )
     var expanded by remember {
         mutableStateOf(false)
@@ -364,6 +367,20 @@ fun HomeScreen(viewModel: HomeVm) {
                             viewModel.navigateToAnalytics()
                         }, text = {
                             Text("Call Analytics", fontFamily = montserrat_semibold, color = TextPrimary)
+                        })
+                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            viewModel.navigateToTeam()
+                        }, text = {
+                            Text("Team Members", fontFamily = montserrat_semibold, color = TextPrimary)
+                        })
+                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        DropdownMenuItem(onClick = {
+                            expanded = false
+                            EventEmitter.postEvent(Event.HomeVm(2, null))
+                        }, text = {
+                            Text("Settings", fontFamily = montserrat_semibold, color = TextPrimary)
                         })
                         Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
                         DefaultDialerMenuItem(
