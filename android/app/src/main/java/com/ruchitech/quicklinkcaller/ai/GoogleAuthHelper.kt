@@ -31,7 +31,8 @@ class GoogleAuthHelper @Inject constructor(
             val token = GoogleAuthUtil.getToken(context, account, GEMINI_SCOPE)
             TokenResult.Success(token)
         } catch (e: UserRecoverableAuthException) {
-            TokenResult.ConsentRequired(e.intent)
+            val consentIntent = e.intent ?: return@withContext TokenResult.Failure("No consent intent")
+            TokenResult.ConsentRequired(consentIntent)
         } catch (e: Exception) {
             TokenResult.Failure(e.message ?: "Failed to get token")
         }
