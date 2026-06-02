@@ -1,6 +1,7 @@
 package com.ruchitech.quicklinkcaller.ui.screens.settings
 
-import android.accounts.AccountManager
+import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,20 +21,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -50,6 +55,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -306,32 +314,11 @@ fun SettingsUi(viewModel: SettingsVm) {
 
 @Composable
 private fun GeminiAiSection(viewModel: SettingsVm) {
-    val googleAiState by viewModel.googleAiState.collectAsState()
-
-    // Launcher for Android's native account picker
-    val accountPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
-        if (!email.isNullOrBlank()) {
-            viewModel.connectGoogleAccount(email)
-        }
-    }
-
-    // Launcher for Google consent screen (when scope not yet approved)
-    val consentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        viewModel.handleConsentResult(result.resultCode == android.app.Activity.RESULT_OK)
-    }
-
-    // Auto-launch consent intent when state requires it
-    if (googleAiState is SettingsVm.GoogleAiState.ConsentRequired) {
-        val intent = (googleAiState as SettingsVm.GoogleAiState.ConsentRequired).intent
-        androidx.compose.runtime.LaunchedEffect(intent) {
-            consentLauncher.launch(intent)
-        }
-    }
+    val context = LocalContext.current
+    val savedKey = viewModel.appPreference.geminiApiKey
+    var keyInput by remember { mutableStateOf(savedKey ?: "") }
+    var keyVisible by remember { mutableStateOf(false) }
+    val hasKey = !savedKey.isNullOrBlank()
 
     Column(
         modifier = Modifier
@@ -346,89 +333,96 @@ private fun GeminiAiSection(viewModel: SettingsVm) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Connect your Google account to unlock Lead Intelligence Score, WhatsApp Message Composer, Smart Notes Analysis, and Daily Briefing — powered by Gemini (free, 1,500 req/day).",
+            text = "Add your free Gemini API key to unlock Lead Intelligence Score, WhatsApp Message Composer, Smart Notes Analysis, and Daily Briefing (free — 1,500 req/day).",
             fontSize = 13.sp,
             color = Color(0xFF6B7280)
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        when (val state = googleAiState) {
-            is SettingsVm.GoogleAiState.Idle, is SettingsVm.GoogleAiState.Error -> {
-                Button(
-                    onClick = { accountPickerLauncher.launch(viewModel.getAccountPickerIntent()) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.AccountCircle, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Sign in with Google", color = Color.White, fontSize = 14.sp)
-                }
-                if (state is SettingsVm.GoogleAiState.Error) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(state.message, fontSize = 12.sp, color = Color(0xFFEF5350))
-                }
-            }
+        // "Get free key" link button
+        OutlinedButton(
+            onClick = {
+                context.startActivity(
+                    Intent(Intent.ACTION_VIEW, Uri.parse("https://aistudio.google.com/app/apikey"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF4285F4))
+        ) {
+            Icon(Icons.Default.Key, null, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Get free API key from Google AI Studio →", fontSize = 13.sp)
+        }
 
-            is SettingsVm.GoogleAiState.Connecting,
-            is SettingsVm.GoogleAiState.ConsentRequired -> {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFF4285F4)
-                    )
-                    Text(
-                        text = if (googleAiState is SettingsVm.GoogleAiState.ConsentRequired)
-                            "Waiting for permission approval…"
-                        else "Connecting…",
-                        fontSize = 13.sp,
-                        color = Color(0xFF6B7280)
-                    )
-                }
-            }
+        Spacer(modifier = Modifier.height(10.dp))
 
-            is SettingsVm.GoogleAiState.Connected -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF0F9F0), RoundedCornerShape(8.dp))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        // API key input
+        OutlinedTextField(
+            value = keyInput,
+            onValueChange = { keyInput = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Paste API key here", fontSize = 13.sp) },
+            singleLine = true,
+            visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { keyVisible = !keyVisible }) {
                     Icon(
-                        Icons.Default.CheckCircle,
-                        null,
-                        tint = Color(0xFF2E7D32),
-                        modifier = Modifier.size(20.dp)
+                        if (keyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null
                     )
-                    Spacer(Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Connected",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2E7D32)
-                        )
-                        Text(state.email, fontSize = 12.sp, color = Color(0xFF6B7280))
-                    }
-                    OutlinedButton(
-                        onClick = { viewModel.disconnectGoogleAccount() },
-                        modifier = Modifier.height(32.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp)
-                    ) {
-                        Text("Disconnect", fontSize = 12.sp, color = Color(0xFF6B7280))
-                    }
                 }
-                Spacer(Modifier.height(4.dp))
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ThemePurple,
+                unfocusedBorderColor = Color(0xFFD1D5DB)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { viewModel.saveGeminiApiKey(keyInput) },
+                enabled = keyInput.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = ThemePurple),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Save Key", fontSize = 13.sp)
+            }
+            if (hasKey) {
+                OutlinedButton(
+                    onClick = {
+                        keyInput = ""
+                        viewModel.saveGeminiApiKey("")
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Remove", fontSize = 13.sp, color = Color(0xFFEF5350))
+                }
+            }
+        }
+
+        if (hasKey) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    null,
+                    tint = Color(0xFF2E7D32),
+                    modifier = Modifier.size(16.dp)
+                )
                 Text(
-                    "AI features are active. Gemini uses your Google account — free 1,500 req/day.",
-                    fontSize = 11.sp,
-                    color = Color(0xFF6B7280)
+                    "AI features active",
+                    fontSize = 12.sp,
+                    color = Color(0xFF2E7D32),
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

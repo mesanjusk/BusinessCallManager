@@ -1,6 +1,5 @@
 package com.ruchitech.quicklinkcaller.ui.screens.settings
 
-import android.accounts.AccountManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -8,7 +7,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.ruchitech.quicklinkcaller.ai.GoogleAuthHelper
 import com.ruchitech.quicklinkcaller.data.ResourcesProvider
 import com.ruchitech.quicklinkcaller.helper.AppPreference
 import com.ruchitech.quicklinkcaller.helper.AppPreferences
@@ -33,7 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -46,82 +43,9 @@ class SettingsVm @Inject constructor(
     private val resourcesProvider: ResourcesProvider,
     private val dbRepository: DbRepository,
     private val accountRepository: AccountRepository,
-    private val googleAuthHelper: GoogleAuthHelper,
     savedStateHandle: SavedStateHandle,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
 
-    // Google account AI auth state
-    sealed class GoogleAiState {
-        object Idle : GoogleAiState()
-        object Connecting : GoogleAiState()
-        data class Connected(val email: String) : GoogleAiState()
-        data class ConsentRequired(val intent: Intent) : GoogleAiState()
-        data class Error(val message: String) : GoogleAiState()
-    }
-
-    private val _googleAiState = MutableStateFlow<GoogleAiState>(
-        if (!appPreference.googleAccountEmail.isNullOrBlank())
-            GoogleAiState.Connected(appPreference.googleAccountEmail!!)
-        else GoogleAiState.Idle
-    )
-    val googleAiState: StateFlow<GoogleAiState> = _googleAiState.asStateFlow()
-
-    fun getAccountPickerIntent(): Intent {
-        return AccountManager.newChooseAccountIntent(
-            null, null,
-            arrayOf("com.google"),
-            null, null, null, null
-        )
-    }
-
-    fun connectGoogleAccount(email: String) {
-        appPreference.googleAccountEmail = email
-        _googleAiState.value = GoogleAiState.Connecting
-        viewModelScope.launch {
-            when (val result = googleAuthHelper.getToken(email)) {
-                is GoogleAuthHelper.TokenResult.Success -> {
-                    _googleAiState.value = GoogleAiState.Connected(email)
-                    showSnackbar("Google account connected — AI features enabled!")
-                }
-                is GoogleAuthHelper.TokenResult.ConsentRequired -> {
-                    _googleAiState.value = GoogleAiState.ConsentRequired(result.intent)
-                }
-                is GoogleAuthHelper.TokenResult.Failure -> {
-                    appPreference.googleAccountEmail = null
-                    _googleAiState.value = GoogleAiState.Error(result.error)
-                    showSnackbar("Connection failed: ${result.error}")
-                }
-            }
-        }
-    }
-
-    fun handleConsentResult(approved: Boolean) {
-        val email = appPreference.googleAccountEmail ?: return
-        if (approved) {
-            viewModelScope.launch {
-                when (val result = googleAuthHelper.getToken(email)) {
-                    is GoogleAuthHelper.TokenResult.Success -> {
-                        _googleAiState.value = GoogleAiState.Connected(email)
-                        showSnackbar("AI features enabled!")
-                    }
-                    else -> {
-                        _googleAiState.value = GoogleAiState.Error("Could not connect")
-                    }
-                }
-            }
-        } else {
-            appPreference.googleAccountEmail = null
-            _googleAiState.value = GoogleAiState.Idle
-        }
-    }
-
-    fun disconnectGoogleAccount() {
-        val email = appPreference.googleAccountEmail ?: return
-        viewModelScope.launch { googleAuthHelper.invalidateToken(email) }
-        appPreference.googleAccountEmail = null
-        _googleAiState.value = GoogleAiState.Idle
-        showSnackbar("Google account disconnected")
-    }
     val appPreferences = AppPreferences(resourcesProvider.getContext().applicationContext)
 
     //var types = mutableStateOf<Set<AllCallerIdOptions?>?>(null)

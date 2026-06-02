@@ -16,7 +16,6 @@ import javax.inject.Singleton
 @Singleton
 class GeminiService @Inject constructor(
     private val appPreference: AppPreference,
-    private val googleAuthHelper: GoogleAuthHelper,
 ) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -26,57 +25,13 @@ class GeminiService @Inject constructor(
     private val endpoint =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-    /**
-     * Returns true if the user has either a connected Google account or a saved API key.
-     */
     val hasAiAccess: Boolean
-        get() = !appPreference.googleAccountEmail.isNullOrBlank()
-                || !appPreference.geminiApiKey.isNullOrBlank()
-
-    /**
-     * Builds the correct request URL / Authorization header based on which auth method is active.
-     * Google account takes priority over API key.
-     */
-    private suspend fun buildAuthenticatedRequest(
-        url: String,
-        body: String,
-    ): Pair<Request, GoogleAuthHelper.TokenResult.ConsentRequired?> {
-        val email = appPreference.googleAccountEmail
-        if (!email.isNullOrBlank()) {
-            return when (val result = googleAuthHelper.getToken(email)) {
-                is GoogleAuthHelper.TokenResult.Success -> {
-                    val req = Request.Builder()
-                        .url(url)
-                        .addHeader("Authorization", "Bearer ${result.token}")
-                        .post(body.toRequestBody("application/json".toMediaType()))
-                        .build()
-                    Pair(req, null)
-                }
-                is GoogleAuthHelper.TokenResult.ConsentRequired -> {
-                    // Return the consent intent so the caller can surface it
-                    throw ConsentRequiredException(result)
-                }
-                is GoogleAuthHelper.TokenResult.Failure -> {
-                    throw Exception(result.error)
-                }
-            }
-        }
-
-        // Fallback: API key
-        val apiKey = appPreference.geminiApiKey
-            ?: throw Exception("No AI credentials configured. Connect a Google account or add an API key in Settings.")
-        val req = Request.Builder()
-            .url("$url?key=$apiKey")
-            .post(body.toRequestBody("application/json".toMediaType()))
-            .build()
-        return Pair(req, null)
-    }
-
-    class ConsentRequiredException(val result: GoogleAuthHelper.TokenResult.ConsentRequired) :
-        Exception("Google account consent required")
+        get() = !appPreference.geminiApiKey.isNullOrBlank()
 
     suspend fun generate(prompt: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
+            val apiKey = appPreference.geminiApiKey
+                ?: throw Exception("No Gemini API key. Add one in Settings → AI Features.")
             val body = JSONObject().apply {
                 put("contents", JSONArray().apply {
                     put(JSONObject().apply {
@@ -87,7 +42,11 @@ class GeminiService @Inject constructor(
                 })
             }.toString()
 
-            val (request, _) = buildAuthenticatedRequest(endpoint, body)
+            val request = Request.Builder()
+                .url("$endpoint?key=$apiKey")
+                .post(body.toRequestBody("application/json".toMediaType()))
+                .build()
+
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
                 ?: throw Exception("Empty response from Gemini")
@@ -98,10 +57,6 @@ class GeminiService @Inject constructor(
                         ?: responseBody
                 } catch (e: Exception) {
                     responseBody
-                }
-                // If token is expired/revoked, clear it so next call re-fetches
-                if (response.code == 401) {
-                    appPreference.googleAccountEmail?.let { googleAuthHelper.invalidateToken(it) }
                 }
                 throw Exception(msg)
             }
