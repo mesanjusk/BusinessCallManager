@@ -1084,9 +1084,6 @@ private fun TasksPopup(
     }
 }
 
-@OptIn(
-    ExperimentalFoundationApi::class
-)
 @Composable
 private fun LeadActionBar(viewModel: ChildCallLogVm) {
     val leadExists by viewModel.leadExists.collectAsState()
@@ -1163,6 +1160,7 @@ private fun LeadActionBar(viewModel: ChildCallLogVm) {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun NotePopup(
     callLog: CallLogDetails,
     onDismiss: () -> Unit,
