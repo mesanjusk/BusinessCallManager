@@ -31,9 +31,12 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -52,14 +55,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
@@ -105,209 +104,147 @@ fun SettingsUi(viewModel: SettingsVm) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        var isServiceEnabled by remember { mutableStateOf(viewModel.appPreference.callerIdType==0) }
+        var isServiceEnabled by remember { mutableStateOf(viewModel.appPreference.callerIdType == 0) }
+
+        // Top bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Color(
-                        0xFFFBE9E7
-                    )
-                )
-                .height(50.dp), verticalAlignment = Alignment.CenterVertically
+                .background(Color(0xFFFBE9E7))
+                .height(56.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {
-                viewModel.navigateUp()
-            }) {
+            IconButton(onClick = { viewModel.navigateUp() }) {
                 Image(imageVector = Icons.Default.ArrowBack, contentDescription = null)
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(text = "Settings", fontSize = 15.sp.nonScaledSp)
+            Text(text = "Settings", fontSize = 18.sp, fontFamily = sfSemibold)
         }
-        Spacer(modifier = Modifier.height(10.dp))
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp)
+                .background(Color(0xFFF5F5F5))
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = "Select Caller ID Options", fontFamily = sfMediumFont, fontSize = 20.sp)
-            // CheckBox for Incoming Calls
-            CheckBoxOption(
-                enabled = true,
-                text = "Incoming Calls",
-                checked = selectedOptions?.contains(AllCallerIdOptions.Incoming) == true,
-                onCheckedChange = { isChecked ->
-                    var tempData = selectedOptions
-                    tempData = if (isChecked) {
-                        tempData?.plus(AllCallerIdOptions.Incoming)
-                    } else {
-                        tempData?.minus(AllCallerIdOptions.Incoming)
+            // ── Caller ID Card ──
+            SettingsCard(title = "CALLER ID DISPLAY") {
+                Text("Show caller info for:", fontSize = 13.sp, color = Color(0xFF6B7280), fontFamily = sfMediumFont)
+                Spacer(Modifier.height(4.dp))
+                CheckBoxOption(
+                    text = "Incoming Calls",
+                    checked = selectedOptions?.contains(AllCallerIdOptions.Incoming) == true,
+                    onCheckedChange = { isChecked ->
+                        var t = selectedOptions
+                        t = if (isChecked) t?.plus(AllCallerIdOptions.Incoming) else t?.minus(AllCallerIdOptions.Incoming)
+                        viewModel.updateCallerIdState(t)
                     }
-                    viewModel.updateCallerIdState(tempData)
-                }
-            )
-
-            // CheckBox for Outgoing Calls
-            CheckBoxOption(
-                enabled = true,
-                text = "Outgoing Calls",
-                checked = selectedOptions?.contains(AllCallerIdOptions.Outgoing) == true,
-                onCheckedChange = { isChecked ->
-                    var tempData = selectedOptions
-                    tempData = if (isChecked) {
-                        tempData?.plus(AllCallerIdOptions.Outgoing)
-                    } else {
-                        tempData?.minus(AllCallerIdOptions.Outgoing)
-                    }
-                    viewModel.updateCallerIdState(tempData)
-                }
-            )
-
-            // CheckBox for Post Calls
-            CheckBoxOption(
-                enabled = true,
-                text = "Post Calls",
-                checked = selectedOptions?.contains(AllCallerIdOptions.Post) == true,
-                onCheckedChange = { isChecked ->
-                    var tempData = selectedOptions
-                    tempData = if (isChecked) {
-                        tempData?.plus(AllCallerIdOptions.Post)
-                    } else {
-                        tempData?.minus(AllCallerIdOptions.Post)
-                    }
-                    viewModel.updateCallerIdState(tempData)
-                }
-            )
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Text(
-                text = "Select mode of  the Caller ID service to control the display of incoming call information.",
-                fontFamily = sfMediumFont, fontSize = 14.sp
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                RadioButtonItem(
-                    text = "Popup",
-                    isChecked = isServiceEnabled,
-                    onCheckedChange = { isServiceEnabled = it }
                 )
-
-                RadioButtonItem(
-                    text = "Notification",
-                    isChecked = !isServiceEnabled,
-                    onCheckedChange = { isServiceEnabled = !it }
+                CheckBoxOption(
+                    text = "Outgoing Calls",
+                    checked = selectedOptions?.contains(AllCallerIdOptions.Outgoing) == true,
+                    onCheckedChange = { isChecked ->
+                        var t = selectedOptions
+                        t = if (isChecked) t?.plus(AllCallerIdOptions.Outgoing) else t?.minus(AllCallerIdOptions.Outgoing)
+                        viewModel.updateCallerIdState(t)
+                    }
                 )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 25.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ThemePurple),
-                onClick = {
-                    val type = if (!isServiceEnabled) 1 else 0
-
-                        viewModel.updateSettings(selectedOptions,type)
-                    /*    viewModel.enableDisableCallerIdService(isServiceEnabled)*/
-
-                //    viewModel.updateCallerIdType(type)
-
-                }) {
-                Text(text = "Save")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Button(
-                    modifier = Modifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
-                    onClick = {
-                        viewModel.navigateToRoute(PrepairDataRoute.withArgs("settings"))
-                    }) {
-                    Text(text = "Check Permissions")
+                CheckBoxOption(
+                    text = "Post Calls",
+                    checked = selectedOptions?.contains(AllCallerIdOptions.Post) == true,
+                    onCheckedChange = { isChecked ->
+                        var t = selectedOptions
+                        t = if (isChecked) t?.plus(AllCallerIdOptions.Post) else t?.minus(AllCallerIdOptions.Post)
+                        viewModel.updateCallerIdState(t)
+                    }
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                Text("Display mode:", fontSize = 13.sp, color = Color(0xFF6B7280), fontFamily = sfMediumFont)
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    RadioButtonItem(text = "Popup", isChecked = isServiceEnabled, onCheckedChange = { isServiceEnabled = it })
+                    RadioButtonItem(text = "Notification", isChecked = !isServiceEnabled, onCheckedChange = { isServiceEnabled = !it })
                 }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Spacer(Modifier.height(12.dp))
                 Button(
-                    modifier = Modifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
-                    onClick = {
-                       showDeleteAccountDialog = true
-                    }) {
-                    Text(text = "Delete Account")
-                }
-            }
-
-
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Button(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ThemePurple),
-                    onClick = {
-                        backupLauncher.launch("quicklink_caller_backup.db")
-                    }) {
-                    Text(text = "Backup Data")
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Button(
-                    modifier = Modifier,
-                    colors = ButtonDefaults.buttonColors(containerColor = ThemePurple),
-                    onClick = {
-                        restoreLauncher.launch(arrayOf("*/*"))
-                    }) {
-                    Text(text = "Restore Data")
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { viewModel.updateSettings(selectedOptions, if (!isServiceEnabled) 1 else 0) }
+                ) {
+                    Text("Save Caller ID Settings")
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            GeminiAiSection(viewModel)
-            Spacer(modifier = Modifier.height(16.dp))
-            WhatsAppLeadCaptureSection()
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                fontFamily = sfMediumFont,
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Caller ID Settings:\n")
-                    }
-                    append("\nCustomize your Caller ID preferences to tailor the information you want to see. Choose from the following options:\n\n")
-                    append("1. ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Incoming Calls:")
-                    }
-                    append(" Receive Caller ID information for incoming calls only.\n\n")
-                    append("2. ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Outgoing Calls:")
-                    }
-                    append(" View Caller ID details for outgoing calls exclusively.\n\n")
-                    append("3. ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Post Calls:")
-                    }
-                    append(" Access Caller ID details after completing a call.\n\n")
-                    /*                 append("4. ")
-                                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                         append("All Caller ID Types:")
-                                     }
-                                     append(" Enable Caller ID for all types of calls.\n\n")*/
-                    append("Select multiple options to personalize your Caller ID experience. Save your preferences to ensure you see the information that matters most to you.")
-                },
-                fontSize = 16.sp,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.padding(16.dp)
-            )
+            // ── AI Features Card ──
+            SettingsCard(title = "AI FEATURES") {
+                GeminiAiSection(viewModel)
+            }
+
+            // ── WhatsApp Card ──
+            SettingsCard(title = "WHATSAPP LEAD CAPTURE") {
+                WhatsAppLeadCaptureSection()
+            }
+
+            // ── Data Card ──
+            SettingsCard(title = "DATA MANAGEMENT") {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = { backupLauncher.launch("quicklink_caller_backup.db") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemePurple),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text("Backup") }
+                    OutlinedButton(
+                        onClick = { restoreLauncher.launch(arrayOf("*/*")) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text("Restore") }
+                }
+            }
+
+            // ── Account Card ──
+            SettingsCard(title = "ACCOUNT") {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5B5EA6)),
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { viewModel.navigateToRoute(PrepairDataRoute.withArgs("settings")) }
+                ) { Text("Check Permissions") }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { showDeleteAccountDialog = true },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350))
+                ) { Text("Delete Account") }
+            }
+
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun SettingsCard(title: String, content: @Composable () -> Unit) {
+    Column {
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            fontFamily = sfMediumFont,
+            color = Color(0xFF6B7280),
+            modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
+        )
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                content()
+            }
         }
     }
 }

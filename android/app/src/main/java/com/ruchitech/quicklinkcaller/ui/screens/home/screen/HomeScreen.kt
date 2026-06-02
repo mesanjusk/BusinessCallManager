@@ -22,6 +22,14 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.IosShare
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -87,6 +95,17 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MenuSectionHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        fontSize = 10.sp,
+        color = TextSecondary.copy(alpha = 0.6f),
+        fontFamily = montserrat_semibold,
+        modifier = androidx.compose.ui.Modifier.padding(start = 16.dp, top = 8.dp, bottom = 2.dp)
+    )
+}
+
 @Composable
 fun DefaultDialerMenuItem(
     context: Context = LocalContext.current,
@@ -307,121 +326,88 @@ fun HomeScreen(viewModel: HomeVm) {
                         modifier = Modifier
                             .wrapContentWidth()
                             .background(NavyElevated)
-                            .padding(end = 10.dp)
                     ) {
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showSaveInappDialog = true
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Create New Contact", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            backupLauncher.launch("quicklink_caller_backup.db")
-                        }, text = {
-                            Text("Backup Data", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            restoreLauncher.launch(arrayOf("*/*"))
-                        }, text = {
-                            Text("Restore Data", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showDateRangePicker = true
-                            viewModel.exportType.intValue = 1
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Export Logs in xlsx", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showDateRangePicker = true
-                            viewModel.exportType.intValue = 0
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Export Logs in pdf", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.exportContactsIntoPdf()
-                        }, text = {
-                            Text("Export Contacts in pdf", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.exportContactsIntoVcf()
-                        }, text = {
-                            Text("Export Contacts in Vcf", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.navigateToAnalytics()
-                        }, text = {
-                            Text("Call Analytics", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.navigateToTeam()
-                        }, text = {
-                            Text("Team Members", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            EventEmitter.postEvent(Event.HomeVm(2, null))
-                        }, text = {
-                            Text("Settings", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        // ── Navigate ──
+                        MenuSectionHeader("Navigate")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToAnalytics() },
+                            leadingIcon = { Icon(Icons.Default.BarChart, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Call Analytics", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToTeam() },
+                            leadingIcon = { Icon(Icons.Default.Group, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Team Members", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showSaveInappDialog = true },
+                            leadingIcon = { Icon(Icons.Default.PersonAdd, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Create New Contact", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── Export ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("Export")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showDateRangePicker = true; viewModel.exportType.intValue = 1 },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Logs → Excel (.xlsx)", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showDateRangePicker = true; viewModel.exportType.intValue = 0 },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Logs → PDF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.exportContactsIntoPdf() },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Contacts → PDF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.exportContactsIntoVcf() },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Contacts → VCF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── Data ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("Data")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; backupLauncher.launch("quicklink_caller_backup.db") },
+                            leadingIcon = { Icon(Icons.Default.Backup, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Backup Data", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; restoreLauncher.launch(arrayOf("*/*")) },
+                            leadingIcon = { Icon(Icons.Default.Restore, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Restore Data", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── App ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("App")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; EventEmitter.postEvent(Event.HomeVm(2, null)) },
+                            leadingIcon = { Icon(Icons.Default.Settings, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Settings", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
                         DefaultDialerMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToDefaultDialer() },
+                            onDismissRequest = { expanded = false }
+                        )
+                        DropdownMenuItem(
                             onClick = {
                                 expanded = false
-                                viewModel.navigateToDefaultDialer()
+                                context.startActivity(Intent(context, WebViewActivity::class.java).apply {
+                                    putExtra("url", Constant.Urls.privacyPolicy)
+                                    putExtra("type", "Privacy Policy")
+                                })
                             },
-                            onDismissRequest = {
-                                expanded = false
-                            }
+                            leadingIcon = { Icon(Icons.Default.Security, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Privacy Policy", fontFamily = montserrat_semibold, color = TextPrimary) }
                         )
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            val intent = Intent(context, WebViewActivity::class.java)
-                            intent.putExtra("url", Constant.Urls.privacyPolicy)
-                            intent.putExtra("type", "Privacy Policy")
-                            context.startActivity(intent)
-                        }, text = {
-                            Text("Privacy Policy", fontFamily = montserrat_semibold, color = TextPrimary)
-                        })
-                        /*        DropdownMenuItem(onClick = {
-                                    expanded = false
-                                    viewModel.signout()
-                                }, text = {
-                                    Text("Sign out", fontFamily = montserrat_semibold)
-                                })*/
-
-
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
                         TriStateToggle(viewModel)
-                        /*                 DropdownMenuItem(onClick = {
-                                             expanded = false
-                                             EventEmitter.postEvent(Event.HomeVm(2, null))
-                                             //  viewModel.exportCallLogsIntoPdf()
-                                         }, text = {
-                                             Text("Settings", fontFamily = montserrat_semibold)
-                                         })*/
-
-
                     }
                 }
                 Spacer(modifier = Modifier.width(10.dp))

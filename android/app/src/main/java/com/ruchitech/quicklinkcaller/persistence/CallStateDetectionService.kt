@@ -435,8 +435,9 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 contactName = contactDetails.ifEmpty { "Unknown" }
             }
 
-            // Auto-create lead for unknown callers
-            if (numberFrom == 0) {
+            // Auto-create lead for unknown callers (unless marked personal)
+            val isPersonal = MyApp.instance.appPreference.personalNumbers.contains(callingNumber)
+            if (numberFrom == 0 && !isPersonal) {
                 val userUuid = MyApp.instance.appPreference.userId
                 if (userUuid != null) {
                     val existing = MyApp.instance.dbRepository.leadDao.getLeadByPhone(callingNumber)

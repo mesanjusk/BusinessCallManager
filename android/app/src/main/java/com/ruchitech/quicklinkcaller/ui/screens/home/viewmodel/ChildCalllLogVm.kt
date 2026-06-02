@@ -33,6 +33,7 @@ import com.ruchitech.quicklinkcaller.persistence.McsConstants
 import com.ruchitech.quicklinkcaller.persistence.recievers.AlarmReceiver
 import com.ruchitech.quicklinkcaller.room.DbRepository
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.room.data.Reminders
 import com.ruchitech.quicklinkcaller.room.data.Tasks
 import com.ruchitech.quicklinkcaller.ui.screens.SharedViewModel
@@ -97,6 +98,11 @@ class ChildCallLogVm @Inject constructor(
     private val _callLogData = MutableStateFlow<List<CallTypeCountDuration>>(emptyList())
     val callLogData: StateFlow<List<CallTypeCountDuration>> = _callLogData
 
+    private val _leadExists = MutableStateFlow<Boolean?>(null)
+    val leadExists: StateFlow<Boolean?> = _leadExists.asStateFlow()
+
+    val isPersonal: Boolean get() = appPreference.personalNumbers.contains(argsData)
+
     private var dateTimeString = ""
 
 
@@ -110,10 +116,13 @@ class ChildCallLogVm @Inject constructor(
     init {
         getPaginatedCallLogs()
         viewModelScope.launch {
-            val normalizer = argsData //normalizePhoneNumber(argsData)
+            val normalizer = argsData
             val data = dbRepository.callLogDao.getCallTypeCountAndDurationByCallerId(normalizer)
             _callLogData.value = data
             Log.e("kjhgjghj", "$data:  $argsData")
+        }
+        viewModelScope.launch {
+            _leadExists.value = dbRepository.leadDao.getLeadByPhone(argsData) != null
         }
     }
 
@@ -403,6 +412,46 @@ class ChildCallLogVm @Inject constructor(
         val inputMethodManager =
             resourcesProvider.appContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
+    }
+
+    fun convertToLead() {
+        viewModelScope.launch {
+            val userUuid = appPreference.userId ?: return@launch
+            if (_leadExists.value == true) {
+                showSnackbar("Already saved as a lead")
+                return@launch
+            }
+            val displayName = _name.value?.takeIf { it.isNotEmpty() && it != "Unknown" }
+            dbRepository.leadDao.insertLead(
+                Lead(
+                    lead_uuid = java.util.UUID.randomUUID().toString(),
+                    user_uuid = userUuid,
+                    phone = argsData,
+                    name = displayName,
+                    source = "call",
+                    status = "New",
+                    notes = "[]",
+                    call_refs = "[]",
+                    isSynced = false
+                )
+            )
+            _leadExists.value = true
+            showSnackbar("Saved as lead!")
+        }
+    }
+
+    fun markAsPersonal() {
+        val current = appPreference.personalNumbers.toMutableSet()
+        current.add(argsData)
+        appPreference.personalNumbers = current
+        showSnackbar("Marked as personal — no auto-leads for this number")
+    }
+
+    fun unmarkAsPersonal() {
+        val current = appPreference.personalNumbers.toMutableSet()
+        current.remove(argsData)
+        appPreference.personalNumbers = current
+        showSnackbar("Personal tag removed")
     }
 
     // Smart Notes Analysis

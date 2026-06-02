@@ -32,7 +32,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
@@ -377,6 +380,7 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
 */
 
             CallLogGrid(callLogsSum)
+            LeadActionBar(viewModel)
             LazyColumn(state = state) {
                 itemsIndexed(callLogs) { index, callLog ->
                     CallLog(callLog, onAddNote = { log, newNote ->
@@ -1083,6 +1087,81 @@ private fun TasksPopup(
 @OptIn(
     ExperimentalFoundationApi::class
 )
+@Composable
+private fun LeadActionBar(viewModel: ChildCallLogVm) {
+    val leadExists by viewModel.leadExists.collectAsState()
+    val isPersonal = viewModel.isPersonal
+
+    androidx.compose.animation.AnimatedVisibility(
+        visible = leadExists != null,
+        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    if (isPersonal) Color(0xFFFFF8E1)
+                    else if (leadExists == true) Color(0xFFF0F9F0)
+                    else Color(0xFFF3F4F6)
+                )
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            when {
+                isPersonal -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Block, null, tint = Color(0xFFD97706), modifier = Modifier.size(14.dp))
+                        Text("Personal number", fontSize = 12.sp, color = Color(0xFFD97706), fontFamily = montserrat_medium)
+                    }
+                    TextButton(
+                        onClick = { viewModel.unmarkAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Remove tag", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+                leadExists == true -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Star, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+                        Text("Saved as lead", fontSize = 12.sp, color = Color(0xFF2E7D32), fontFamily = montserrat_medium)
+                    }
+                    TextButton(
+                        onClick = { viewModel.markAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Mark personal", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+                else -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { viewModel.convertToLead() },
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = ThemePurple),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Icon(Icons.Default.StarBorder, null, modifier = Modifier.size(13.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Convert to Lead", fontSize = 11.sp)
+                        }
+                    }
+                    TextButton(
+                        onClick = { viewModel.markAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Personal", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun NotePopup(
     callLog: CallLogDetails,
