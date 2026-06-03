@@ -30,6 +30,7 @@
     <uses-permission android:name="android.permission.REQUEST_DEFAULT_DIALER" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO" />-->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
 
     <queries>
         <intent>
@@ -188,6 +189,16 @@
         </receiver>
 
         <receiver android:name=".persistence.recievers.NotificationReceiver" />
+
+        <service
+            android:name=".persistence.WhatsAppNotificationListener"
+            android:exported="true"
+            android:label="WhatsApp Lead Capture"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <receiver
             android:name=".persistence.recievers.LastCallProcessor"

@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.ruchitech.quicklinkcaller.ai.GeminiService
 import com.ruchitech.quicklinkcaller.contactutills.CallLogHelper
 import com.ruchitech.quicklinkcaller.data.ResourcesProvider
 import com.ruchitech.quicklinkcaller.helper.AppPreference
@@ -32,6 +33,7 @@ import com.ruchitech.quicklinkcaller.persistence.McsConstants
 import com.ruchitech.quicklinkcaller.persistence.recievers.AlarmReceiver
 import com.ruchitech.quicklinkcaller.room.DbRepository
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.room.data.Reminders
 import com.ruchitech.quicklinkcaller.room.data.Tasks
 import com.ruchitech.quicklinkcaller.ui.screens.SharedViewModel
@@ -60,7 +62,8 @@ class ChildCallLogVm @Inject constructor(
     private val callLogHelper: CallLogHelper,
     private val dbRepository: DbRepository,
     private val savedStateHandle: SavedStateHandle,
-    private val resourcesProvider: ResourcesProvider
+    private val resourcesProvider: ResourcesProvider,
+    private val geminiService: GeminiService,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
     private val argsData =
         ChildCallLogRoute.getArgs(savedStateHandle, ChildCallLogRoute.KEY_CALLER_ID)
@@ -95,6 +98,11 @@ class ChildCallLogVm @Inject constructor(
     private val _callLogData = MutableStateFlow<List<CallTypeCountDuration>>(emptyList())
     val callLogData: StateFlow<List<CallTypeCountDuration>> = _callLogData
 
+    private val _leadExists = MutableStateFlow<Boolean?>(null)
+    val leadExists: StateFlow<Boolean?> = _leadExists.asStateFlow()
+
+    val isPersonal: Boolean get() = appPreference.personalNumbers.contains(argsData)
+
     private var dateTimeString = ""
 
 
@@ -108,10 +116,13 @@ class ChildCallLogVm @Inject constructor(
     init {
         getPaginatedCallLogs()
         viewModelScope.launch {
-            val normalizer = argsData //normalizePhoneNumber(argsData)
+            val normalizer = argsData
             val data = dbRepository.callLogDao.getCallTypeCountAndDurationByCallerId(normalizer)
             _callLogData.value = data
             Log.e("kjhgjghj", "$data:  $argsData")
+        }
+        viewModelScope.launch {
+            _leadExists.value = dbRepository.leadDao.getLeadByPhone(argsData) != null
         }
     }
 
@@ -402,5 +413,109 @@ class ChildCallLogVm @Inject constructor(
             resourcesProvider.appContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
     }
+
+    fun convertToLead() {
+        viewModelScope.launch {
+            val userUuid = appPreference.userId ?: return@launch
+            if (_leadExists.value == true) {
+                showSnackbar("Already saved as a lead")
+                return@launch
+            }
+            val displayName = _name.value?.takeIf { it.isNotEmpty() && it != "Unknown" }
+            dbRepository.leadDao.insertLead(
+                Lead(
+                    lead_uuid = java.util.UUID.randomUUID().toString(),
+                    user_uuid = userUuid,
+                    phone = argsData,
+                    name = displayName,
+                    source = "call",
+                    status = "New",
+                    notes = "[]",
+                    call_refs = "[]",
+                    isSynced = false
+                )
+            )
+            _leadExists.value = true
+            showSnackbar("Saved as lead!")
+        }
+    }
+
+    fun markAsPersonal() {
+        val current = appPreference.personalNumbers.toMutableSet()
+        current.add(argsData)
+        appPreference.personalNumbers = current
+        showSnackbar("Marked as personal — no auto-leads for this number")
+    }
+
+    fun unmarkAsPersonal() {
+        val current = appPreference.personalNumbers.toMutableSet()
+        current.remove(argsData)
+        appPreference.personalNumbers = current
+        showSnackbar("Personal tag removed")
+    }
+
+    // Smart Notes Analysis
+    sealed class NoteAnalysisState {
+        object Idle : NoteAnalysisState()
+        object Loading : NoteAnalysisState()
+        data class Success(val text: String) : NoteAnalysisState()
+        data class Error(val message: String) : NoteAnalysisState()
+    }
+    private val _noteAnalysisState = MutableStateFlow<NoteAnalysisState>(NoteAnalysisState.Idle)
+    val noteAnalysisState: StateFlow<NoteAnalysisState> = _noteAnalysisState.asStateFlow()
+    val hasGeminiKey: Boolean get() = geminiService.hasAiAccess
+
+    fun analyzeNote(note: String) {
+        if (!geminiService.hasAiAccess || note.isBlank()) return
+        viewModelScope.launch {
+            _noteAnalysisState.value = NoteAnalysisState.Loading
+            val result = geminiService.analyzeNotes(note)
+            _noteAnalysisState.value = result.fold(
+                onSuccess = { NoteAnalysisState.Success(it) },
+                onFailure = { NoteAnalysisState.Error(it.message ?: "AI error") }
+            )
+        }
+    }
+
+    fun resetNoteAnalysis() { _noteAnalysisState.value = NoteAnalysisState.Idle }
+
+    // Pre-call AI Brief
+    sealed class PreCallBriefState {
+        object Idle : PreCallBriefState()
+        object Loading : PreCallBriefState()
+        data class Success(val text: String) : PreCallBriefState()
+        data class Error(val message: String) : PreCallBriefState()
+    }
+    private val _preCallBriefState = MutableStateFlow<PreCallBriefState>(PreCallBriefState.Idle)
+    val preCallBriefState: StateFlow<PreCallBriefState> = _preCallBriefState.asStateFlow()
+
+    fun loadPreCallBrief() {
+        if (!geminiService.hasAiAccess) {
+            _preCallBriefState.value = PreCallBriefState.Error("Add a Gemini API key in Settings → AI Features to use Smart Dialer.")
+            return
+        }
+        _preCallBriefState.value = PreCallBriefState.Loading
+        viewModelScope.launch {
+            val logs = _callLogs.value
+            val lastCallDate = logs.maxOfOrNull { it.date } ?: 0L
+            val recentNote = logs.firstOrNull { !it.callNote.isNullOrBlank() }?.callNote ?: ""
+            val lead = dbRepository.leadDao.getLeadByPhone(argsData)
+            val result = geminiService.generatePreCallBrief(
+                name = _name.value?.takeIf { it != "Unknown" },
+                phone = argsData,
+                totalCalls = logs.size,
+                lastCallDate = lastCallDate,
+                isLead = lead != null,
+                leadStatus = lead?.status,
+                recentNotes = recentNote
+            )
+            _preCallBriefState.value = result.fold(
+                onSuccess = { PreCallBriefState.Success(it) },
+                onFailure = { PreCallBriefState.Error(it.message ?: "AI error") }
+            )
+        }
+    }
+
+    fun dismissPreCallBrief() { _preCallBriefState.value = PreCallBriefState.Idle }
 
 }

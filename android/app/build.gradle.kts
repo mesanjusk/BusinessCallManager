@@ -26,8 +26,8 @@ android {
         applicationId = "com.ruchitech.quicklinkcaller"
         minSdk = 23
         targetSdk = 36
-        versionCode = 31
-        versionName = "1.31"
+        versionCode = 32
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -128,6 +128,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     val compose_version = "1.8.3"
     val nav_version = "2.7.6"
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
@@ -194,6 +195,7 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.1.0")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.23.0")
     implementation("com.google.accompanist:accompanist-pager:0.25.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("io.michaelrocks:libphonenumber-android:8.13.48")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.13.5")
 

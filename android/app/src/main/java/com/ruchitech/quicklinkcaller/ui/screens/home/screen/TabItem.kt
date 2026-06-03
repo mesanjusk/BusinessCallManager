@@ -21,5 +21,4 @@ sealed class TabItem(
 
     class NotesTab(noteAndReminderVm: NoteAndReminderVm) :
         TabItem(R.drawable.call_log_black, "Actions", { NoteAndReminderUi(viewModel = noteAndReminderVm) })
-
 }

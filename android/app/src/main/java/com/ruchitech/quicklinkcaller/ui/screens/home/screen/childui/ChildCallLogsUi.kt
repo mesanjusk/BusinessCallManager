@@ -31,9 +31,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -100,6 +106,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.LoaderItem
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.ChildCallLogVm
 import com.ruchitech.quicklinkcaller.ui.theme.DarkGray
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.dimBlack
@@ -254,6 +261,8 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
     val name by viewModel.name.collectAsState()
     val data = callLogs.firstOrNull()
     val callLogsSum by viewModel.callLogData.collectAsState()
+    val preCallBriefState by viewModel.preCallBriefState.collectAsState()
+    var showBriefSheet by remember { mutableStateOf(false) }
 
     var showAddNoteDialog by remember {
         mutableStateOf(false)
@@ -305,7 +314,7 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(NavyPrimary)
     ) {
         Column {
             ContactTopBar(name = name,data) {
@@ -372,7 +381,15 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
             }
 */
 
+            SmartDialerBar(
+                hasAiKey = viewModel.hasGeminiKey,
+                onClick = {
+                    showBriefSheet = true
+                    viewModel.loadPreCallBrief()
+                }
+            )
             CallLogGrid(callLogsSum)
+            LeadActionBar(viewModel)
             LazyColumn(state = state) {
                 itemsIndexed(callLogs) { index, callLog ->
                     CallLog(callLog, onAddNote = { log, newNote ->
@@ -425,6 +442,16 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
                 }
             }
         }
+    }
+
+    if (showBriefSheet) {
+        PreCallBriefSheet(
+            state = preCallBriefState,
+            onDismiss = {
+                showBriefSheet = false
+                viewModel.dismissPreCallBrief()
+            }
+        )
     }
 }
 
@@ -661,6 +688,46 @@ private fun CallLog(
                     color = dimBlack,
                     modifier = Modifier.padding(start = 12.dp, end = 10.dp)
                 )
+                // Smart Notes Analysis
+                if (viewModel.hasGeminiKey) {
+                    val noteAnalysisState by viewModel.noteAnalysisState.collectAsState()
+                    Row(
+                        modifier = Modifier.padding(start = 12.dp, end = 10.dp, top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(14.dp))
+                        when (val s = noteAnalysisState) {
+                            is ChildCallLogVm.NoteAnalysisState.Idle -> TextButton(
+                                onClick = { viewModel.analyzeNote(log.callNote ?: "") },
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp)
+                            ) {
+                                Text("AI Analyze", fontSize = 11.sp, color = Color(0xFF6C63FF))
+                            }
+                            is ChildCallLogVm.NoteAnalysisState.Loading -> CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = Color(0xFF6C63FF)
+                            )
+                            is ChildCallLogVm.NoteAnalysisState.Success -> {
+                                Column {
+                                    Text(s.text, fontSize = 12.sp, color = Color(0xFF333333), modifier = Modifier.padding(top = 2.dp))
+                                    TextButton(
+                                        onClick = { viewModel.resetNoteAnalysis() },
+                                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                        modifier = Modifier.height(20.dp)
+                                    ) { Text("Clear", fontSize = 10.sp, color = Color.Gray) }
+                                }
+                            }
+                            is ChildCallLogVm.NoteAnalysisState.Error -> TextButton(
+                                onClick = { viewModel.resetNoteAnalysis() },
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp)
+                            ) {
+                                Text("Error — tap to dismiss", fontSize = 11.sp, color = Color(0xFFEF5350))
+                            }
+                        }
+                    }
+                }
             }
 
 
@@ -750,6 +817,125 @@ private fun CallLog(
     }
 }
 
+
+@Composable
+private fun SmartDialerBar(hasAiKey: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1A1A2E))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(15.dp))
+            Text("Smart Dialer", fontSize = 12.sp, color = Color(0xFF9E9E9E), fontFamily = montserrat_medium)
+        }
+        TextButton(
+            onClick = onClick,
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+            modifier = Modifier.height(28.dp)
+        ) {
+            Text(
+                text = if (hasAiKey) "AI Brief" else "Set up AI",
+                fontSize = 11.sp,
+                color = Color(0xFF6C63FF),
+                fontFamily = montserrat_medium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PreCallBriefSheet(
+    state: ChildCallLogVm.PreCallBriefState,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1C1C2E),
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle(color = Color(0xFF4A4A6A)) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(20.dp))
+                    Text("AI Pre-Call Brief", fontFamily = montserrat_semibold, color = Color.White, fontSize = 16.sp)
+                }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.Close, null, tint = Color(0xFF9E9E9E), modifier = Modifier.size(18.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            when (state) {
+                is ChildCallLogVm.PreCallBriefState.Loading -> {
+                    Box(Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFF6C63FF), strokeWidth = 2.dp)
+                    }
+                }
+                is ChildCallLogVm.PreCallBriefState.Success -> {
+                    val lines = state.text.split("\n").filter { it.isNotBlank() }
+                    lines.forEach { line ->
+                        val (label, content) = when {
+                            line.startsWith("CONTEXT:") -> "CONTEXT" to line.removePrefix("CONTEXT:").trim()
+                            line.startsWith("TIP:") -> "TIP" to line.removePrefix("TIP:").trim()
+                            line.startsWith("OPENER:") -> "OPENER" to line.removePrefix("OPENER:").trim()
+                            else -> null to line
+                        }
+                        if (label != null) {
+                            val chipColor = when (label) {
+                                "CONTEXT" -> Color(0xFF1565C0)
+                                "TIP" -> Color(0xFF2E7D32)
+                                "OPENER" -> Color(0xFF6C63FF)
+                                else -> Color(0xFF4A4A6A)
+                            }
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = chipColor.copy(alpha = 0.15f)),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(label, fontSize = 10.sp, color = chipColor, fontFamily = montserrat_semibold)
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(content, fontSize = 14.sp, color = Color.White, fontFamily = montserrat)
+                                }
+                            }
+                        } else {
+                            Text(line, fontSize = 13.sp, color = Color(0xFF9E9E9E), fontFamily = montserrat)
+                        }
+                    }
+                }
+                is ChildCallLogVm.PreCallBriefState.Error -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFD32F2F).copy(alpha = 0.1f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            state.message,
+                            modifier = Modifier.padding(14.dp),
+                            fontSize = 13.sp,
+                            color = Color(0xFFEF9A9A),
+                            fontFamily = montserrat
+                        )
+                    }
+                }
+                else -> Unit
+            }
+        }
+    }
+}
 
 @Composable
 fun CircularProfileImage() {
@@ -1036,10 +1222,83 @@ private fun TasksPopup(
     }
 }
 
-@OptIn(
-    ExperimentalFoundationApi::class
-)
 @Composable
+private fun LeadActionBar(viewModel: ChildCallLogVm) {
+    val leadExists by viewModel.leadExists.collectAsState()
+    val isPersonal = viewModel.isPersonal
+
+    androidx.compose.animation.AnimatedVisibility(
+        visible = leadExists != null,
+        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    if (isPersonal) Color(0xFFFFF8E1)
+                    else if (leadExists == true) Color(0xFFF0F9F0)
+                    else Color(0xFFF3F4F6)
+                )
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            when {
+                isPersonal -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Block, null, tint = Color(0xFFD97706), modifier = Modifier.size(14.dp))
+                        Text("Personal number", fontSize = 12.sp, color = Color(0xFFD97706), fontFamily = montserrat_medium)
+                    }
+                    TextButton(
+                        onClick = { viewModel.unmarkAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Remove tag", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+                leadExists == true -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Star, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+                        Text("Saved as lead", fontSize = 12.sp, color = Color(0xFF2E7D32), fontFamily = montserrat_medium)
+                    }
+                    TextButton(
+                        onClick = { viewModel.markAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Mark personal", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+                else -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { viewModel.convertToLead() },
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = ThemePurple),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Icon(Icons.Default.StarBorder, null, modifier = Modifier.size(13.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Convert to Lead", fontSize = 11.sp)
+                        }
+                    }
+                    TextButton(
+                        onClick = { viewModel.markAsPersonal() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Personal", fontSize = 11.sp, color = Color(0xFF6B7280))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun NotePopup(
     callLog: CallLogDetails,
     onDismiss: () -> Unit,

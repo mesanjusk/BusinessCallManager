@@ -103,6 +103,8 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.HintedTextField
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.TimePickerPopup
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.Orange
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat
@@ -863,7 +865,7 @@ fun PostCallInfoPopup(
                                             offset = DpOffset(0.dp, 10.dp),
                                             modifier = Modifier
                                                 .wrapContentWidth()
-                                                .background(Color.White)
+                                                .background(NavyPrimary)
                                                 .padding(end = 10.dp)
                                         ) {
                                             DropdownMenuItem(onClick = {
@@ -997,7 +999,7 @@ fun PostCallInfoPopup(
                         .padding(0.dp)
                         .size(22.dp)
                         .clip(shape = RoundedCornerShape(25.dp))
-                        .background(color = Color.White)
+                        .background(color = NavySurface)
                         .clickable { onClose() }
                 )
                 Spacer(modifier = Modifier.width(25.dp))
@@ -1008,7 +1010,7 @@ fun PostCallInfoPopup(
                         .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f) // Adjust the scale as needed
                         .size(22.dp)
                         .clip(shape = RoundedCornerShape(25.dp))
-                        .background(color = Color.White)
+                        .background(color = NavySurface)
                         .clickable { onMinimize() }
                 )
             }

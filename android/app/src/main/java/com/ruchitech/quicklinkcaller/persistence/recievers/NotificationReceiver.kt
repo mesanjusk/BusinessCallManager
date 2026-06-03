@@ -48,6 +48,7 @@ class NotificationReceiver : BroadcastReceiver() {
         const val ACTION_SHARE_CONTACT = "ACTION_SHARE_CONTACT"
         const val ACTION_REMINDER = "ACTION_REMINDER"
         const val ACTION_SAVE_CONTACT = "ACTION_SAVE_CONTACT"
+        const val ACTION_ADD_LEAD = "ACTION_ADD_LEAD"
 
     }
 

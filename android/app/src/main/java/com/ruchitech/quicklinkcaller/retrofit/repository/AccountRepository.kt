@@ -6,6 +6,7 @@ import com.ruchitech.quicklinkcaller.helper.AppPreference
 import com.ruchitech.quicklinkcaller.retrofit.model.BaseResponse
 import com.ruchitech.quicklinkcaller.retrofit.model.DataByUser
 import com.ruchitech.quicklinkcaller.retrofit.model.TestModel
+import com.ruchitech.quicklinkcaller.retrofit.remote.AppLogRequest
 import com.ruchitech.quicklinkcaller.retrofit.remote.AppService
 import com.ruchitech.quicklinkcaller.retrofit.remote.Resource
 import com.ruchitech.quicklinkcaller.retrofit.repository.resource.networkOnlyResource

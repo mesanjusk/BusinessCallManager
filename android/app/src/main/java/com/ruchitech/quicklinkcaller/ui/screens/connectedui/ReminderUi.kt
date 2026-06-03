@@ -65,6 +65,7 @@ import com.ruchitech.quicklinkcaller.helper.formatTimestampToDate
 import com.ruchitech.quicklinkcaller.helper.isDateInPast
 import com.ruchitech.quicklinkcaller.helper.isTimeInPast
 import com.ruchitech.quicklinkcaller.room.data.Reminders
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
 import com.ruchitech.quicklinkcaller.ui.theme.TextColor
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
@@ -329,7 +330,7 @@ fun DatePicker(
         Column(
             modifier = Modifier
                 .padding(horizontal = 20.dp)
-                .background(Color.White, shape = MaterialTheme.shapes.medium)
+                .background(NavySurface, shape = MaterialTheme.shapes.medium)
                 .widthIn(min = 300.dp, max = 400.dp)
         ) {
             DatePicker(

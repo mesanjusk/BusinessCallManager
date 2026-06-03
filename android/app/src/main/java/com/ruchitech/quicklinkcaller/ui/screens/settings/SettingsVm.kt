@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -46,6 +45,7 @@ class SettingsVm @Inject constructor(
     private val accountRepository: AccountRepository,
     savedStateHandle: SavedStateHandle,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
+
     val appPreferences = AppPreferences(resourcesProvider.getContext().applicationContext)
 
     //var types = mutableStateOf<Set<AllCallerIdOptions?>?>(null)
@@ -138,6 +138,11 @@ class SettingsVm @Inject constructor(
                     }
                 }
         }
+    }
+
+    fun saveGeminiApiKey(key: String) {
+        appPreference.geminiApiKey = key.trim().ifBlank { null }
+        showSnackbar(if (key.isBlank()) "Gemini API key removed" else "Gemini API key saved")
     }
 
     fun backupDatabase(uri: Uri) {

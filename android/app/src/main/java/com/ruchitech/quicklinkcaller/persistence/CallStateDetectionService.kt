@@ -68,6 +68,7 @@ import com.ruchitech.quicklinkcaller.persistence.recievers.NotificationReceiver.
 import com.ruchitech.quicklinkcaller.persistence.recievers.ServiceControlReceiver
 import com.ruchitech.quicklinkcaller.persistence.recievers.TriggerReceiver
 import com.ruchitech.quicklinkcaller.room.DbRepository
+import com.ruchitech.quicklinkcaller.room.data.Lead
 import com.ruchitech.quicklinkcaller.room.data.Tasks
 import com.ruchitech.quicklinkcaller.ui.screens.callerid.service.CallerIdService
 import com.ruchitech.quicklinkcaller.ui.screens.callerid.service.stopAppCallerIdService
@@ -434,6 +435,29 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 contactName = contactDetails.ifEmpty { "Unknown" }
             }
 
+            // Auto-create lead for unknown callers (unless marked personal)
+            val isPersonal = MyApp.instance.appPreference.personalNumbers.contains(callingNumber)
+            if (numberFrom == 0 && !isPersonal) {
+                val userUuid = MyApp.instance.appPreference.userId
+                if (userUuid != null) {
+                    val existing = MyApp.instance.dbRepository.leadDao.getLeadByPhone(callingNumber)
+                    if (existing == null) {
+                        MyApp.instance.dbRepository.leadDao.insertLead(
+                            Lead(
+                                lead_uuid = java.util.UUID.randomUUID().toString(),
+                                user_uuid = userUuid,
+                                phone = callingNumber,
+                                source = "call",
+                                status = "New",
+                                notes = "[]",
+                                call_refs = "[]",
+                                isSynced = false
+                            )
+                        )
+                    }
+                }
+            }
+
             delay(150)
             val callIntent = Intent(context, PostCallActivity::class.java).apply {
                 action = NotificationReceiver.ACTION_CALL
@@ -530,6 +554,18 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 android.R.drawable.ic_input_add, "cancel", addNotePendingIntent
             ).build()
 
+            val addLeadIntent = Intent(context, PostCallActivity::class.java).apply {
+                action = NotificationReceiver.ACTION_ADD_LEAD
+                putExtra("type", callType)
+                putExtra("number", callingNumber)
+                putExtra("name", contactName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            val addLeadPendingIntent = PendingIntent.getActivity(
+                context, notificationId + 100, addLeadIntent,
+                FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
             val copyNumberIntent = Intent(context, PostCallActivity::class.java).apply {
                 action = NotificationReceiver.ACTION_COPY_NUMBER
                 putExtra("type", callType)
@@ -578,6 +614,11 @@ class CallStateDetectionService : Service(), Handler.Callback {
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setCustomContentView(notificationLayout)
                 .setCustomBigContentView(notificationLayout)
+                .apply {
+                    if (numberFrom == 0) {
+                        addAction(android.R.drawable.ic_menu_add, "Add Lead", addLeadPendingIntent)
+                    }
+                }
             // Show the notification
             with(NotificationManagerCompat.from(context)) {
                 notify(notificationId, builder.build())

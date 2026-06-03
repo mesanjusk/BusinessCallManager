@@ -3,12 +3,13 @@ package com.ruchitech.quicklinkcaller.helper
 import android.content.Context
 import android.content.SharedPreferences
 import com.ruchitech.quicklinkcaller.ui.screens.settings.AllCallerIdOptions
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 class AppPreference
 @Inject
 constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
 
 
@@ -136,6 +137,26 @@ constructor(
             value
         ).apply()
 
+    var geminiApiKey: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(GEMINI_API_KEY, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(GEMINI_API_KEY, value).apply()
+
+    var googleAccountEmail: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(GOOGLE_ACCOUNT_EMAIL, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(GOOGLE_ACCOUNT_EMAIL, value).apply()
+
+    var personalNumbers: Set<String>
+        get() = getSharedPreference(PREFERENCE_KEY).getStringSet(PERSONAL_NUMBERS, emptySet()) ?: emptySet()
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putStringSet(PERSONAL_NUMBERS, value).apply()
+
+    var premiumExpiry: Long?
+        get() = getSharedPreference(PREFERENCE_KEY).getLong(PREMIUM_EXPIRY, 0L).takeIf { it > 0 }
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putLong(PREMIUM_EXPIRY, value ?: 0L).apply()
+
+    var pendingTransactionId: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(PENDING_TXN_ID, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(PENDING_TXN_ID, value).apply()
+
     // SharedPreferences extension functions
     fun SharedPreferences.getCallerIdOptions(key: String): Set<AllCallerIdOptions> {
         val optionsString = getString(key, null)
@@ -171,6 +192,11 @@ constructor(
         private const val CALLER_ID_TYPE = "CALLER_ID_TYPE"
         private const val MOBILE_NUMBER = "mobile_number"
         private const val SET_DFAULT_DONE = "SET_DFAULT_DONE"
+        private const val GEMINI_API_KEY = "gemini_api_key"
+        private const val GOOGLE_ACCOUNT_EMAIL = "google_account_email"
+        private const val PERSONAL_NUMBERS = "personal_numbers"
+        private const val PREMIUM_EXPIRY = "premium_expiry"
+        private const val PENDING_TXN_ID = "pending_txn_id"
     }
 
 }

@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.telecom.TelecomManager
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.IosShare
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,7 +81,12 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.childui.SampleDatePickerView
 import com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel.HomeVm
 import com.ruchitech.quicklinkcaller.ui.screens.notesandreminders.viewmodel.NoteAndReminderVm
+import com.ruchitech.quicklinkcaller.ui.theme.NavyElevated
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.NavySurface
 import com.ruchitech.quicklinkcaller.ui.theme.PurpleSolid
+import com.ruchitech.quicklinkcaller.ui.theme.TextPrimary
+import com.ruchitech.quicklinkcaller.ui.theme.TextSecondary
 import com.ruchitech.quicklinkcaller.ui.theme.google_sans_medium
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat_semibold
 import com.ruchitech.quicklinkcaller.ui.theme.normalGoogleSansStyle
@@ -78,6 +95,17 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MenuSectionHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        fontSize = 10.sp,
+        color = TextSecondary.copy(alpha = 0.6f),
+        fontFamily = montserrat_semibold,
+        modifier = androidx.compose.ui.Modifier.padding(start = 16.dp, top = 8.dp, bottom = 2.dp)
+    )
+}
+
 @Composable
 fun DefaultDialerMenuItem(
     context: Context = LocalContext.current,
@@ -228,7 +256,7 @@ fun HomeScreen(viewModel: HomeVm) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color.White)
+                .background(color = NavyPrimary)
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             Row(
@@ -297,117 +325,104 @@ fun HomeScreen(viewModel: HomeVm) {
                         properties = PopupProperties(clippingEnabled = false),
                         modifier = Modifier
                             .wrapContentWidth()
-                            .background(Color.White)
-                            .padding(end = 10.dp)
+                            .background(NavyElevated)
                     ) {
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showSaveInappDialog = true
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Create New Contact", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            backupLauncher.launch("quicklink_caller_backup.db")
-                        }, text = {
-                            Text("Backup Data", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            restoreLauncher.launch(arrayOf("*/*"))
-                        }, text = {
-                            Text("Restore Data", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showDateRangePicker = true
-                            viewModel.exportType.intValue = 1
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Export Logs in xlsx", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            showDateRangePicker = true
-                            viewModel.exportType.intValue = 0
-                            //  viewModel.exportCallLogsIntoPdf()
-                        }, text = {
-                            Text("Export Logs in pdf", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.exportContactsIntoPdf()
-                        }, text = {
-                            Text("Export Contacts in pdf", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.exportContactsIntoVcf()
-                        }, text = {
-                            Text("Export Contacts in Vcf", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            viewModel.navigateToAnalytics()
-                        }, text = {
-                            Text("Call Analytics", fontFamily = montserrat_semibold)
-                        })
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        // ── Navigate ──
+                        MenuSectionHeader("Navigate")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToAnalytics() },
+                            leadingIcon = { Icon(Icons.Default.BarChart, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Call Analytics", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToTeam() },
+                            leadingIcon = { Icon(Icons.Default.Group, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Team Members", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToAdminDashboard() },
+                            leadingIcon = { Icon(Icons.Default.Security, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Admin Dashboard", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showSaveInappDialog = true },
+                            leadingIcon = { Icon(Icons.Default.PersonAdd, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Create New Contact", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── Export ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("Export")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showDateRangePicker = true; viewModel.exportType.intValue = 1 },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Logs → Excel (.xlsx)", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; showDateRangePicker = true; viewModel.exportType.intValue = 0 },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Logs → PDF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.exportContactsIntoPdf() },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Contacts → PDF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.exportContactsIntoVcf() },
+                            leadingIcon = { Icon(Icons.Default.IosShare, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Contacts → VCF", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── Data ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("Data")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; backupLauncher.launch("quicklink_caller_backup.db") },
+                            leadingIcon = { Icon(Icons.Default.Backup, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Backup Data", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
+                            onClick = { expanded = false; restoreLauncher.launch(arrayOf("*/*")) },
+                            leadingIcon = { Icon(Icons.Default.Restore, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Restore Data", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+
+                        // ── App ──
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
+                        MenuSectionHeader("App")
+                        DropdownMenuItem(
+                            onClick = { expanded = false; EventEmitter.postEvent(Event.HomeVm(2, null)) },
+                            leadingIcon = { Icon(Icons.Default.Settings, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Settings", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
                         DefaultDialerMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToDefaultDialer() },
+                            onDismissRequest = { expanded = false }
+                        )
+                        DropdownMenuItem(
                             onClick = {
                                 expanded = false
-                                viewModel.navigateToDefaultDialer()
+                                context.startActivity(Intent(context, WebViewActivity::class.java).apply {
+                                    putExtra("url", Constant.Urls.privacyPolicy)
+                                    putExtra("type", "Privacy Policy")
+                                })
                             },
-                            onDismissRequest = {
-                                expanded = false
-                            }
+                            leadingIcon = { Icon(Icons.Default.Security, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Privacy Policy", fontFamily = montserrat_semibold, color = TextPrimary) }
                         )
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
-                        DropdownMenuItem(onClick = {
-                            expanded = false
-                            val intent = Intent(context, WebViewActivity::class.java)
-                            intent.putExtra("url", Constant.Urls.privacyPolicy)
-                            intent.putExtra("type", "Privacy Policy")
-                            context.startActivity(intent)
-                        }, text = {
-                            Text("Privacy Policy", fontFamily = montserrat_semibold)
-                        })
-                        /*        DropdownMenuItem(onClick = {
-                                    expanded = false
-                                    viewModel.signout()
-                                }, text = {
-                                    Text("Sign out", fontFamily = montserrat_semibold)
-                                })*/
-
-
-                        Divider(modifier = Modifier.padding(start = 10.dp), thickness = 0.5.dp)
+                        Divider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
                         TriStateToggle(viewModel)
-                        /*                 DropdownMenuItem(onClick = {
-                                             expanded = false
-                                             EventEmitter.postEvent(Event.HomeVm(2, null))
-                                             //  viewModel.exportCallLogsIntoPdf()
-                                         }, text = {
-                                             Text("Settings", fontFamily = montserrat_semibold)
-                                         })*/
-
-
                     }
                 }
                 Spacer(modifier = Modifier.width(10.dp))
             }
             Spacer(modifier = Modifier.height(10.dp))
+            DailyBriefingBanner(viewModel)
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
-                contentColor = Color.White,
-                containerColor = Color.White,
+                contentColor = TextPrimary,
+                containerColor = NavySurface,
                 divider = {
                     Divider(thickness = 0.dp, color = Color.Transparent)
                 },
@@ -424,9 +439,7 @@ fun HomeScreen(viewModel: HomeVm) {
                         text = {
                             Text(
                                 tab.title,
-                                color = if (pagerState.currentPage == index) PurpleSolid else Color(
-                                    0xFF333333
-                                ),
+                                color = if (pagerState.currentPage == index) PurpleSolid else TextSecondary,
                                 style = normalGoogleSansStyle.copy(fontFamily = google_sans_medium),
                                 textAlign = if (index == 0) TextAlign.Start else if (index == 1) TextAlign.Center else TextAlign.End,
                                 fontSize = 15.sp.nonScaledSp,
@@ -482,4 +495,62 @@ fun HomeScreen(viewModel: HomeVm) {
 
     }
 
+}
+
+@Composable
+private fun DailyBriefingBanner(viewModel: HomeVm) {
+    if (!viewModel.hasGeminiKey) return
+
+    val briefingState by viewModel.briefingState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (briefingState is HomeVm.BriefingState.Idle) {
+            viewModel.loadDailyBriefing()
+        }
+    }
+
+    when (val state = briefingState) {
+        is HomeVm.BriefingState.Loading -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(NavyElevated)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                    color = PurpleSolid
+                )
+                Text("Loading AI briefing…", fontSize = 12.sp, color = TextSecondary)
+            }
+        }
+        is HomeVm.BriefingState.Success -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PurpleSolid.copy(alpha = 0.10f))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = PurpleSolid,
+                    modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                )
+                Text(
+                    state.text,
+                    fontSize = 12.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f),
+                    lineHeight = 18.sp
+                )
+            }
+        }
+        else -> {}
+    }
 }

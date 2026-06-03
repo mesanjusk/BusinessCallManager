@@ -51,6 +51,7 @@ import com.ruchitech.quicklinkcaller.ui.screens.connectedui.PrivacyPolicyText
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.TermsAndConditionsText
 import com.ruchitech.quicklinkcaller.ui.screens.connectedui.nonScaledSp
 import com.ruchitech.quicklinkcaller.ui.screens.otp.viewmodel.OtpRequestVM
+import com.ruchitech.quicklinkcaller.ui.theme.NavyPrimary
 import com.ruchitech.quicklinkcaller.ui.theme.TextFieldBg
 import com.ruchitech.quicklinkcaller.ui.theme.ThemePurple
 import com.ruchitech.quicklinkcaller.ui.theme.montserrat
@@ -65,7 +66,7 @@ fun OtpRequestUi(viewModel: OtpRequestVM) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White), contentAlignment = Alignment.Center
+            .background(NavyPrimary), contentAlignment = Alignment.Center
     ) {
         Column {
             Column(
@@ -73,7 +74,7 @@ fun OtpRequestUi(viewModel: OtpRequestVM) {
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .padding(horizontal = 10.dp)
-                    .background(Color.White),
+                    .background(NavyPrimary),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
