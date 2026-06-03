@@ -149,6 +149,14 @@ constructor(
         get() = getSharedPreference(PREFERENCE_KEY).getStringSet(PERSONAL_NUMBERS, emptySet()) ?: emptySet()
         set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putStringSet(PERSONAL_NUMBERS, value).apply()
 
+    var premiumExpiry: Long?
+        get() = getSharedPreference(PREFERENCE_KEY).getLong(PREMIUM_EXPIRY, 0L).takeIf { it > 0 }
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putLong(PREMIUM_EXPIRY, value ?: 0L).apply()
+
+    var pendingTransactionId: String?
+        get() = getSharedPreference(PREFERENCE_KEY).getString(PENDING_TXN_ID, null)
+        set(value) = getSharedPreferenceEditor(PREFERENCE_KEY).putString(PENDING_TXN_ID, value).apply()
+
     // SharedPreferences extension functions
     fun SharedPreferences.getCallerIdOptions(key: String): Set<AllCallerIdOptions> {
         val optionsString = getString(key, null)
@@ -187,6 +195,8 @@ constructor(
         private const val GEMINI_API_KEY = "gemini_api_key"
         private const val GOOGLE_ACCOUNT_EMAIL = "google_account_email"
         private const val PERSONAL_NUMBERS = "personal_numbers"
+        private const val PREMIUM_EXPIRY = "premium_expiry"
+        private const val PENDING_TXN_ID = "pending_txn_id"
     }
 
 }

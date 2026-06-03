@@ -688,6 +688,10 @@ class HomeVm @Inject constructor(
         navigateToRoute(Screen.TeamManagementScreen.route)
     }
 
+    fun navigateToAdminDashboard() {
+        navigateToRoute(Screen.AdminDashboardScreen.route)
+    }
+
     private fun normalizePhoneNumber(phoneNumber: String): String {
         // Remove non-numeric characters and leading '0' or country code
         var normalizedNumber = phoneNumber.replace(Regex("[^0-9+]"), "")

@@ -79,6 +79,8 @@ fun CallAnalyticsScreen(viewModel: CallAnalyticsVm) {
         Spacer(Modifier.height(12.dp))
         Highlights(state)
         Spacer(Modifier.height(12.dp))
+        LeadFunnel(state)
+        Spacer(Modifier.height(12.dp))
         Charts(state)
         Spacer(Modifier.height(12.dp))
         TopContacts(state)
@@ -374,6 +376,90 @@ private fun TopContacts(state: CallAnalyticsVm.CallAnalyticsState) {
                             Text("Call back", style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold, color = Orange))
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LeadFunnel(state: CallAnalyticsVm.CallAnalyticsState) {
+    if (state.totalLeads == 0) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Lead Funnel", style = normalGoogleSansStyle, fontWeight = FontWeight.SemiBold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            state.leadFunnel.forEach { item ->
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(item.color).copy(alpha = 0.1f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = item.count.toString(),
+                            style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
+                            fontSize = 20.sp,
+                            color = androidx.compose.ui.graphics.Color(item.color)
+                        )
+                        Text(item.status, style = normalGoogleSansStyle, fontSize = 10.sp, color = TextSecondary)
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = NavyElevated),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Conversion", style = normalGoogleSansStyle, color = TextSecondary)
+                    Text(
+                        String.format("%.0f%%", state.leadConversionRate * 100),
+                        style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
+                        fontSize = 16.sp,
+                        color = ThemePurple
+                    )
+                }
+            }
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = NavyElevated),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("New this period", style = normalGoogleSansStyle, color = TextSecondary)
+                    Text(
+                        state.newLeadsInRange.toString(),
+                        style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
+                        fontSize = 16.sp,
+                        color = ThemePurple
+                    )
+                }
+            }
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = NavyElevated),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Avg age", style = normalGoogleSansStyle, color = TextSecondary)
+                    val days = (state.avgLeadAgeHours / 24f)
+                    Text(
+                        if (days < 1f) "${state.avgLeadAgeHours.toInt()}h" else "${days.toInt()}d",
+                        style = normalGoogleSansStyle.copy(fontWeight = FontWeight.Bold),
+                        fontSize = 16.sp,
+                        color = Orange
+                    )
                 }
             }
         }

@@ -25,6 +25,7 @@ import com.ruchitech.quicklinkcaller.navhost.routes.SettingsRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.SplashRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.TasksRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.TeamManagementRoute
+import com.ruchitech.quicklinkcaller.navhost.routes.AdminDashboardRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.UpgradeRoute
 import com.ruchitech.quicklinkcaller.navhost.routes.VerifyOtpRoute
 
@@ -62,5 +63,6 @@ fun NavigationComponent(
         BusinessSetupRoute.composable(this, navHostController, snackbarHostState)
         JoinBusinessRoute.composable(this, navHostController, snackbarHostState)
         UpgradeRoute.composable(this, navHostController, snackbarHostState)
+        AdminDashboardRoute.composable(this, navHostController, snackbarHostState)
     }
 }

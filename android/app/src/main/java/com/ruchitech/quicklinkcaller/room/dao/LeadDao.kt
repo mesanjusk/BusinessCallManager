@@ -47,4 +47,13 @@ interface LeadDao {
 
     @Update
     suspend fun updateLead(lead: Lead)
+
+    @Query("SELECT * FROM leads ORDER BY created_at DESC")
+    suspend fun getAllLeadsOnce(): List<Lead>
+
+    @Query("SELECT * FROM leads WHERE user_uuid = :userUuid ORDER BY created_at DESC")
+    suspend fun getAllLeadsByUser(userUuid: String): List<Lead>
+
+    @Query("SELECT * FROM leads WHERE created_at BETWEEN :start AND :end ORDER BY created_at DESC")
+    suspend fun getLeadsBetween(start: Long, end: Long): List<Lead>
 }

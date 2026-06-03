@@ -261,6 +261,8 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
     val name by viewModel.name.collectAsState()
     val data = callLogs.firstOrNull()
     val callLogsSum by viewModel.callLogData.collectAsState()
+    val preCallBriefState by viewModel.preCallBriefState.collectAsState()
+    var showBriefSheet by remember { mutableStateOf(false) }
 
     var showAddNoteDialog by remember {
         mutableStateOf(false)
@@ -379,6 +381,13 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
             }
 */
 
+            SmartDialerBar(
+                hasAiKey = viewModel.hasGeminiKey,
+                onClick = {
+                    showBriefSheet = true
+                    viewModel.loadPreCallBrief()
+                }
+            )
             CallLogGrid(callLogsSum)
             LeadActionBar(viewModel)
             LazyColumn(state = state) {
@@ -433,6 +442,16 @@ fun ChildCallLogsUi(viewModel: ChildCallLogVm) {
                 }
             }
         }
+    }
+
+    if (showBriefSheet) {
+        PreCallBriefSheet(
+            state = preCallBriefState,
+            onDismiss = {
+                showBriefSheet = false
+                viewModel.dismissPreCallBrief()
+            }
+        )
     }
 }
 
@@ -798,6 +817,125 @@ private fun CallLog(
     }
 }
 
+
+@Composable
+private fun SmartDialerBar(hasAiKey: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1A1A2E))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(15.dp))
+            Text("Smart Dialer", fontSize = 12.sp, color = Color(0xFF9E9E9E), fontFamily = montserrat_medium)
+        }
+        TextButton(
+            onClick = onClick,
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+            modifier = Modifier.height(28.dp)
+        ) {
+            Text(
+                text = if (hasAiKey) "AI Brief" else "Set up AI",
+                fontSize = 11.sp,
+                color = Color(0xFF6C63FF),
+                fontFamily = montserrat_medium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PreCallBriefSheet(
+    state: ChildCallLogVm.PreCallBriefState,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1C1C2E),
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle(color = Color(0xFF4A4A6A)) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color(0xFF6C63FF), modifier = Modifier.size(20.dp))
+                    Text("AI Pre-Call Brief", fontFamily = montserrat_semibold, color = Color.White, fontSize = 16.sp)
+                }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.Close, null, tint = Color(0xFF9E9E9E), modifier = Modifier.size(18.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            when (state) {
+                is ChildCallLogVm.PreCallBriefState.Loading -> {
+                    Box(Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFF6C63FF), strokeWidth = 2.dp)
+                    }
+                }
+                is ChildCallLogVm.PreCallBriefState.Success -> {
+                    val lines = state.text.split("\n").filter { it.isNotBlank() }
+                    lines.forEach { line ->
+                        val (label, content) = when {
+                            line.startsWith("CONTEXT:") -> "CONTEXT" to line.removePrefix("CONTEXT:").trim()
+                            line.startsWith("TIP:") -> "TIP" to line.removePrefix("TIP:").trim()
+                            line.startsWith("OPENER:") -> "OPENER" to line.removePrefix("OPENER:").trim()
+                            else -> null to line
+                        }
+                        if (label != null) {
+                            val chipColor = when (label) {
+                                "CONTEXT" -> Color(0xFF1565C0)
+                                "TIP" -> Color(0xFF2E7D32)
+                                "OPENER" -> Color(0xFF6C63FF)
+                                else -> Color(0xFF4A4A6A)
+                            }
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = chipColor.copy(alpha = 0.15f)),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(label, fontSize = 10.sp, color = chipColor, fontFamily = montserrat_semibold)
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(content, fontSize = 14.sp, color = Color.White, fontFamily = montserrat)
+                                }
+                            }
+                        } else {
+                            Text(line, fontSize = 13.sp, color = Color(0xFF9E9E9E), fontFamily = montserrat)
+                        }
+                    }
+                }
+                is ChildCallLogVm.PreCallBriefState.Error -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFD32F2F).copy(alpha = 0.1f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            state.message,
+                            modifier = Modifier.padding(14.dp),
+                            fontSize = 13.sp,
+                            color = Color(0xFFEF9A9A),
+                            fontFamily = montserrat
+                        )
+                    }
+                }
+                else -> Unit
+            }
+        }
+    }
+}
 
 @Composable
 fun CircularProfileImage() {

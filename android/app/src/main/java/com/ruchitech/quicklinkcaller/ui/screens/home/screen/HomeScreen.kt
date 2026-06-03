@@ -340,6 +340,11 @@ fun HomeScreen(viewModel: HomeVm) {
                             text = { Text("Team Members", fontFamily = montserrat_semibold, color = TextPrimary) }
                         )
                         DropdownMenuItem(
+                            onClick = { expanded = false; viewModel.navigateToAdminDashboard() },
+                            leadingIcon = { Icon(Icons.Default.Security, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
+                            text = { Text("Admin Dashboard", fontFamily = montserrat_semibold, color = TextPrimary) }
+                        )
+                        DropdownMenuItem(
                             onClick = { expanded = false; showSaveInappDialog = true },
                             leadingIcon = { Icon(Icons.Default.PersonAdd, null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
                             text = { Text("Create New Contact", fontFamily = montserrat_semibold, color = TextPrimary) }

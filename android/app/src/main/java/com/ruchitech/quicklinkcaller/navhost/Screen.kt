@@ -27,4 +27,5 @@ sealed class Screen(val route: String) {
     data object TasksScreen : Screen(route = Constant.RoutePaths.TasksRoute)
     data object UpgradeScreen : Screen(route = Constant.RoutePaths.UpgradeRoute)
     data object ActivityScreen : Screen(route = Constant.RoutePaths.ActivityRoute)
+    data object AdminDashboardScreen : Screen(route = Constant.RoutePaths.AdminDashboardRoute)
 }

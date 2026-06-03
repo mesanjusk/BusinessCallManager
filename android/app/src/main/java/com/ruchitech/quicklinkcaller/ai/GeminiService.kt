@@ -136,4 +136,50 @@ class GeminiService @Inject constructor(
             appendLine("Be specific, upbeat and actionable. No emojis.")
         }
     )
+
+    suspend fun generatePreCallBrief(
+        name: String?,
+        phone: String,
+        totalCalls: Int,
+        lastCallDate: Long,
+        isLead: Boolean,
+        leadStatus: String?,
+        recentNotes: String,
+    ): Result<String> = generate(
+        buildString {
+            appendLine("You are a smart sales dialer assistant. Give a concise pre-call brief for this contact.")
+            appendLine("Format your response EXACTLY as:")
+            appendLine("CONTEXT: [1 sentence about who this person is based on data]")
+            appendLine("TIP: [1 actionable tip for this call]")
+            appendLine("OPENER: [a suggested conversation opener]")
+            appendLine()
+            appendLine("Contact data:")
+            appendLine("Name: ${name ?: "Unknown"}")
+            appendLine("Phone: $phone")
+            appendLine("Total calls: $totalCalls")
+            val daysSince = if (lastCallDate > 0) ((System.currentTimeMillis() - lastCallDate) / 86400000) else -1
+            if (daysSince >= 0) appendLine("Last call: $daysSince days ago") else appendLine("Last call: never")
+            appendLine("Is lead: $isLead")
+            if (isLead && !leadStatus.isNullOrBlank()) appendLine("Lead status: $leadStatus")
+            if (recentNotes.isNotBlank()) {
+                appendLine("Recent notes: $recentNotes")
+            }
+            appendLine()
+            appendLine("Be brief and actionable. No emojis.")
+        }
+    )
+
+    suspend fun generateCallSuggestion(
+        name: String?,
+        callType: String,
+        durationSec: Long,
+        notes: String,
+    ): Result<String> = generate(
+        buildString {
+            appendLine("Based on this call, give ONE specific next-step suggestion in under 20 words.")
+            appendLine("Name: ${name ?: "Unknown"}, Call type: $callType, Duration: ${durationSec}s")
+            if (notes.isNotBlank()) appendLine("Notes: $notes")
+            appendLine("Return ONLY the suggestion text.")
+        }
+    )
 }

@@ -1,6 +1,7 @@
 package com.ruchitech.quicklinkcaller.ui.screens.home.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.ruchitech.quicklinkcaller.helper.AppPreference
 import com.ruchitech.quicklinkcaller.room.DbRepository
 import com.ruchitech.quicklinkcaller.room.data.CallLogDetails
 import com.ruchitech.quicklinkcaller.ui.screens.home.screen.CallType
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 class CallAnalyticsVm @Inject constructor(
     private val dbRepository: DbRepository,
     private val routeNavigator: RouteNavigator,
+    private val appPreference: AppPreference,
 ) : SharedViewModel(), RouteNavigator by routeNavigator {
 
     data class TopNumber(
@@ -28,6 +30,8 @@ class CallAnalyticsVm @Inject constructor(
         val totalDuration: Long,
         val lastDate: Long
     )
+
+    data class LeadFunnelItem(val status: String, val count: Int, val color: Long)
 
     data class CallAnalyticsState(
         val totalCalls: Int = 0,
@@ -55,7 +59,16 @@ class CallAnalyticsVm @Inject constructor(
         val longestCall: LongCall? = null,
         val topNewContacts: List<TopNumber> = emptyList(),
         val loading: Boolean = true,
-        val rangeLabel: String = "Last 30 days"
+        val rangeLabel: String = "Last 30 days",
+        // Lead funnel
+        val totalLeads: Int = 0,
+        val leadsWon: Int = 0,
+        val leadsLost: Int = 0,
+        val leadsInProgress: Int = 0,
+        val newLeadsInRange: Int = 0,
+        val leadConversionRate: Float = 0f,
+        val leadFunnel: List<LeadFunnelItem> = emptyList(),
+        val avgLeadAgeHours: Float = 0f,
     )
 
     private val _state = MutableStateFlow(CallAnalyticsState())
@@ -185,6 +198,27 @@ class CallAnalyticsVm @Inject constructor(
                     )
                 }.sortedByDescending { it.lastDate }.take(5)
 
+            // Lead funnel
+            val userUuid = appPreference.userId ?: ""
+            val allLeads = dbRepository.leadDao.getAllLeadsOnce()
+            val leadsInRange = allLeads.filter { it.created_at in nowRange.first..nowRange.second }
+            val statusGroups = allLeads.groupBy { it.status }
+            val wonCount = statusGroups["Won"]?.size ?: 0
+            val lostCount = statusGroups["Lost"]?.size ?: 0
+            val newCount = statusGroups["New"]?.size ?: 0
+            val inProgressCount = allLeads.size - wonCount - lostCount - newCount
+            val conversionRate = if (allLeads.isEmpty()) 0f else wonCount.toFloat() / allLeads.size.toFloat()
+            val avgAgeHours = if (allLeads.isEmpty()) 0f else {
+                val now = System.currentTimeMillis()
+                allLeads.map { (now - it.created_at) / 3600000f }.average().toFloat()
+            }
+            val funnel = listOf(
+                LeadFunnelItem("New", newCount, 0xFF1976D2),
+                LeadFunnelItem("In Progress", inProgressCount.coerceAtLeast(0), 0xFFFF8F00),
+                LeadFunnelItem("Won", wonCount, 0xFF2E7D32),
+                LeadFunnelItem("Lost", lostCount, 0xFFD32F2F),
+            )
+
             _state.value = CallAnalyticsState(
                 totalCalls = total,
                 incoming = incoming,
@@ -211,7 +245,15 @@ class CallAnalyticsVm @Inject constructor(
                 longestCall = longestCall,
                 topNewContacts = topNewContacts,
                 loading = false,
-                rangeLabel = range.label
+                rangeLabel = range.label,
+                totalLeads = allLeads.size,
+                leadsWon = wonCount,
+                leadsLost = lostCount,
+                leadsInProgress = inProgressCount.coerceAtLeast(0),
+                newLeadsInRange = leadsInRange.size,
+                leadConversionRate = conversionRate,
+                leadFunnel = funnel,
+                avgLeadAgeHours = avgAgeHours,
             )
         }
     }

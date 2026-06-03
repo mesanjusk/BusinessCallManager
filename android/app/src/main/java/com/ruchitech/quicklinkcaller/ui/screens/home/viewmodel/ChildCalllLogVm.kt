@@ -479,4 +479,43 @@ class ChildCallLogVm @Inject constructor(
 
     fun resetNoteAnalysis() { _noteAnalysisState.value = NoteAnalysisState.Idle }
 
+    // Pre-call AI Brief
+    sealed class PreCallBriefState {
+        object Idle : PreCallBriefState()
+        object Loading : PreCallBriefState()
+        data class Success(val text: String) : PreCallBriefState()
+        data class Error(val message: String) : PreCallBriefState()
+    }
+    private val _preCallBriefState = MutableStateFlow<PreCallBriefState>(PreCallBriefState.Idle)
+    val preCallBriefState: StateFlow<PreCallBriefState> = _preCallBriefState.asStateFlow()
+
+    fun loadPreCallBrief() {
+        if (!geminiService.hasAiAccess) {
+            _preCallBriefState.value = PreCallBriefState.Error("Add a Gemini API key in Settings → AI Features to use Smart Dialer.")
+            return
+        }
+        _preCallBriefState.value = PreCallBriefState.Loading
+        viewModelScope.launch {
+            val logs = _callLogs.value
+            val lastCallDate = logs.maxOfOrNull { it.date } ?: 0L
+            val recentNote = logs.firstOrNull { !it.callNote.isNullOrBlank() }?.callNote ?: ""
+            val lead = dbRepository.leadDao.getLeadByPhone(argsData)
+            val result = geminiService.generatePreCallBrief(
+                name = _name.value?.takeIf { it != "Unknown" },
+                phone = argsData,
+                totalCalls = logs.size,
+                lastCallDate = lastCallDate,
+                isLead = lead != null,
+                leadStatus = lead?.status,
+                recentNotes = recentNote
+            )
+            _preCallBriefState.value = result.fold(
+                onSuccess = { PreCallBriefState.Success(it) },
+                onFailure = { PreCallBriefState.Error(it.message ?: "AI error") }
+            )
+        }
+    }
+
+    fun dismissPreCallBrief() { _preCallBriefState.value = PreCallBriefState.Idle }
+
 }
